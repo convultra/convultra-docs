@@ -36,6 +36,7 @@
 }
 
 .hero-subtitle {
+  display: block;
   font-size: 1.25rem;
   color: var(--text-secondary);
   margin-bottom: 2rem;
