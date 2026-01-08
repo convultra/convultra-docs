@@ -97,3 +97,20 @@ main {
   from { opacity: 0; }
   to { opacity: 1; }
 }
+
+/* Fix right sidebar TOC spacing */
+.nextra-toc ul {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.nextra-toc li {
+  margin: 0 !important;
+  padding: 0.25rem 0 !important;
+  line-height: 1.4 !important;
+}
+
+.nextra-toc a {
+  font-size: 0.875rem !important;
+  padding: 0.125rem 0 !important;
+}
