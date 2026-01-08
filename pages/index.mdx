@@ -1,198 +1,83 @@
 ---
-title: Convultra Documentation
+title: Documentation
 ---
 
 import { Cards, Card } from 'nextra/components'
 
-<div className="landing-page">
+# Convultra Documentation
 
-<section className="hero">
-  <div className="hero-badge">Server-Side Conversion Tracking</div>
-  <h1 className="hero-title">
-    Track Every Conversion.<br />
-    <span className="hero-gradient">Ultra Accurate.</span>
-  </h1>
-  <div className="hero-description">
-    Capture 95-98% of conversions with server-side tracking that bypasses 
-    ad blockers, ITP restrictions, and cookie limitations.
-  </div>
-  <div className="hero-cta">
-    <a href="/getting-started/installation" className="btn-primary">Get Started</a>
-    <a href="/getting-started/introduction" className="btn-secondary">Learn More</a>
-  </div>
-</section>
+Welcome to the Convultra documentation. Learn how to integrate server-side conversion tracking that captures 95-98% of conversions.
 
-<section className="stats-bar">
-  <div className="stat">
-    <span className="stat-value">95-98%</span>
-    <span className="stat-label">Conversion Accuracy</span>
-  </div>
-  <div className="stat">
-    <span className="stat-value">90 days</span>
-    <span className="stat-label">Attribution Window</span>
-  </div>
-  <div className="stat">
-    <span className="stat-value">5 min</span>
-    <span className="stat-label">Setup Time</span>
-  </div>
-  <div className="stat">
-    <span className="stat-value">5+</span>
-    <span className="stat-label">Ad Platforms</span>
-  </div>
-</section>
+## Getting Started
 
-<section className="problem-section">
-  <h2>The Problem with Traditional Tracking</h2>
-  <div className="section-subtitle">Client-side pixels are failing. Here's why you're losing 30-40% of your conversion data:</div>
-  
-  <div className="problem-grid">
-    <div className="problem-card">
-      <span className="problem-icon">🚫</span>
-      <h3>Ad Blockers</h3>
-      <span className="card-text">30-40% of users block Google, Meta, and Microsoft tracking scripts</span>
-    </div>
-    <div className="problem-card">
-      <span className="problem-icon">🍎</span>
-      <h3>Safari ITP</h3>
-      <span className="card-text">Cookies expire in just 7 days, breaking long purchase cycles</span>
-    </div>
-    <div className="problem-card">
-      <span className="problem-icon">📱</span>
-      <h3>iOS Privacy</h3>
-      <span className="card-text">App Tracking Transparency blocks cross-app attribution</span>
-    </div>
-    <div className="problem-card">
-      <span className="problem-icon">🔒</span>
-      <h3>Privacy Browsers</h3>
-      <span className="card-text">Firefox, Brave, and others block third-party requests entirely</span>
-    </div>
-  </div>
-</section>
+<Cards>
+  <Card title="Introduction" href="/getting-started/introduction">
+    Learn what Convultra does and why it matters
+  </Card>
+  <Card title="Installation" href="/getting-started/installation">
+    Add the SDK to your website in minutes
+  </Card>
+  <Card title="Quick Start" href="/getting-started/quick-start">
+    Track your first conversion
+  </Card>
+  <Card title="How It Works" href="/getting-started/how-it-works">
+    Understand the architecture
+  </Card>
+</Cards>
 
-<section className="solution-section">
-  <h2>How Convultra Solves This</h2>
-  <div className="section-subtitle">Server-side tracking that works regardless of client-side restrictions</div>
-  
-  <div className="feature-grid">
-    <div className="feature-card">
-      <div className="feature-icon">🎯</div>
-      <h3>Server-Side Tracking</h3>
-      <span className="card-text">Events go directly to your server, then to ad platforms. Nothing for ad blockers to intercept.</span>
-    </div>
-    <div className="feature-card">
-      <div className="feature-icon">💾</div>
-      <h3>90-Day Attribution</h3>
-      <span className="card-text">Click IDs stored in localStorage persist for 90 days, far beyond cookie limits.</span>
-    </div>
-    <div className="feature-card">
-      <div className="feature-icon">🔄</div>
-      <h3>Auto-Deduplication</h3>
-      <span className="card-text">Multi-tier deduplication prevents double-counting across all platforms.</span>
-    </div>
-    <div className="feature-card">
-      <div className="feature-icon">📊</div>
-      <h3>All Platforms</h3>
-      <span className="card-text">One SDK forwards to Google, Meta, Microsoft, TikTok, and LinkedIn automatically.</span>
-    </div>
-    <div className="feature-card">
-      <div className="feature-icon">🔐</div>
-      <h3>Enhanced Conversions</h3>
-      <span className="card-text">Automatic hashing of customer data for 85-95% match rates.</span>
-    </div>
-    <div className="feature-card">
-      <div className="feature-icon">🤖</div>
-      <h3>AI Referral Tracking</h3>
-      <span className="card-text">Track conversions from ChatGPT, Claude, Perplexity, and other AI platforms.</span>
-    </div>
-  </div>
-</section>
+## JavaScript SDK
 
-<section className="code-section">
-  <h2>Simple Integration</h2>
-  <div className="section-subtitle">Add one script tag and start tracking in minutes</div>
-  
-  <div className="code-example">
+<Cards>
+  <Card title="Configuration" href="/sdk/configuration">
+    SDK options and initialization
+  </Card>
+  <Card title="Tracking Events" href="/sdk/tracking-events">
+    Track custom events
+  </Card>
+  <Card title="Tracking Conversions" href="/sdk/tracking-conversions">
+    Purchase, lead, signup tracking
+  </Card>
+  <Card title="Enhanced Conversions" href="/sdk/enhanced-conversions">
+    Improve match rates with user data
+  </Card>
+</Cards>
 
-```html
-<script 
-  src="https://cdn.convultra.com/ultra.min.js"
-  data-convultra-key="proj_your_api_key"
-></script>
-```
+## Integrations
 
-  </div>
+<Cards>
+  <Card title="Google Ads" href="/integrations/google-ads">
+    Offline Conversions API
+  </Card>
+  <Card title="Meta Ads" href="/integrations/meta-ads">
+    Conversions API (CAPI)
+  </Card>
+  <Card title="Microsoft Ads" href="/integrations/microsoft-ads">
+    Offline Conversions
+  </Card>
+  <Card title="TikTok Ads" href="/integrations/tiktok-ads">
+    Events API
+  </Card>
+</Cards>
 
-  <div className="code-example">
+## Advanced
 
-```javascript
-// Track a purchase conversion
-Convultra.trackPurchase({
-  orderId: 'ORD-12345',
-  value: 99.99,
-  currency: 'USD'
-});
+<Cards>
+  <Card title="Deduplication" href="/advanced/deduplication">
+    Multi-tier deduplication system
+  </Card>
+  <Card title="Cross-Domain Tracking" href="/advanced/cross-domain">
+    Track across multiple domains
+  </Card>
+  <Card title="Bot Detection" href="/advanced/bot-detection">
+    Filter bot traffic from analytics
+  </Card>
+  <Card title="AI Referrals" href="/advanced/ai-referrals">
+    Track AI platform referrals
+  </Card>
+</Cards>
 
-// With Enhanced Conversions
-Convultra.trackConversion('lead', 
-  { formId: 'contact-form' },
-  { email: 'user@example.com' }
-);
-```
+## Need Help?
 
-  </div>
-</section>
-
-<section className="platforms-section">
-  <h2>Integrates with Your Ad Platforms</h2>
-  <div className="section-subtitle">Automatic server-side forwarding to all major advertising platforms</div>
-  
-  <div className="platform-grid">
-    <a href="/integrations/google-ads" className="platform-card">
-      <span className="platform-name">Google Ads</span>
-      <span className="platform-api">Offline Conversions API</span>
-    </a>
-    <a href="/integrations/meta-ads" className="platform-card">
-      <span className="platform-name">Meta Ads</span>
-      <span className="platform-api">Conversions API</span>
-    </a>
-    <a href="/integrations/microsoft-ads" className="platform-card">
-      <span className="platform-name">Microsoft Ads</span>
-      <span className="platform-api">Offline Conversions</span>
-    </a>
-    <a href="/integrations/tiktok-ads" className="platform-card">
-      <span className="platform-name">TikTok Ads</span>
-      <span className="platform-api">Events API</span>
-    </a>
-    <a href="/integrations/linkedin-ads" className="platform-card">
-      <span className="platform-name">LinkedIn Ads</span>
-      <span className="platform-api">Conversions API</span>
-    </a>
-  </div>
-</section>
-
-<section className="docs-section">
-  <h2>Documentation</h2>
-  
-  <Cards>
-    <Card title="Getting Started" href="/getting-started/introduction">
-      Installation and setup guides
-    </Card>
-    <Card title="JavaScript SDK" href="/sdk/configuration">
-      Configuration and tracking methods
-    </Card>
-    <Card title="Integrations" href="/integrations/overview">
-      Connect your ad platforms
-    </Card>
-    <Card title="Advanced" href="/advanced/deduplication">
-      Deduplication, attribution, and more
-    </Card>
-  </Cards>
-</section>
-
-<section className="cta-section">
-  <h2>Ready to recover your lost conversions?</h2>
-  <div className="cta-text">Start tracking with 95-98% accuracy in under 5 minutes.</div>
-  <a href="/getting-started/installation" className="btn-primary btn-large">Get Started →</a>
-</section>
-
-</div>
+- Check the [Troubleshooting Guide](/troubleshooting/common-issues)
+- Read the [FAQ](/troubleshooting/faq)
+- Contact support at [support@convultra.com](mailto:support@convultra.com)
