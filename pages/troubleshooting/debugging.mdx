@@ -1,0 +1,329 @@
+import { Callout, Steps, Tabs, Tab } from 'nextra/components'
+
+# Debugging
+
+Tools and techniques for debugging your Convultra implementation.
+
+## Enable Debug Mode
+
+### JavaScript Console
+
+Enable verbose logging:
+
+```javascript
+Convultra.debug(true)
+```
+
+This logs:
+- All events sent
+- Server responses
+- Click ID captures
+- Session information
+- Errors
+
+### Debug Output Example
+
+```
+[Convultra] Initialized with project: proj_abc123
+[Convultra] Session: sess_1704067200000_xyz789
+[Convultra] Click ID captured: gclid=Cj0KCQjw...
+[Convultra] Page view sent: /products
+[Convultra] → Response: 200 OK {event_id: "evt_..."}
+[Convultra] Event sent: add_to_cart {sku: "PROD-001"}
+[Convultra] → Response: 200 OK {event_id: "evt_..."}
+```
+
+### Disable Debug Mode
+
+```javascript
+Convultra.debug(false)
+```
+
+---
+
+## Browser DevTools
+
+### Network Tab
+
+Monitor tracking requests:
+
+<Steps>
+### Open DevTools
+
+F12 or Cmd+Option+I (Mac)
+
+### Go to Network Tab
+
+Filter by your endpoint domain or "track"
+
+### Watch Requests
+
+Each event creates a POST request:
+- Status: Should be 200
+- Response: Should contain `event_id`
+
+### Check Headers
+
+Verify:
+- Content-Type: application/json
+- Authorization (if using)
+</Steps>
+
+### Console Tab
+
+Look for:
+- JavaScript errors
+- Convultra debug logs (if enabled)
+- Warnings about blocked requests
+
+### Application Tab
+
+Check stored data:
+- LocalStorage: `_cu_gclid`, `_cu_fbclid`, `_cu_session`
+- Cookies: Session cookies if configured
+
+---
+
+## SDK Utilities
+
+### Get Session Info
+
+```javascript
+// Current session ID
+Convultra.getSessionId()
+// => "sess_1704067200000_abc123"
+
+// User ID (if identified)
+Convultra.getUserId()
+// => "user_12345" or null
+```
+
+### Get Click IDs
+
+```javascript
+Convultra.getClickIds()
+// => {
+//   gclid: "Cj0KCQ...",
+//   fbclid: "IwAR3x...",
+//   msclkid: null,
+//   ttclid: null
+// }
+```
+
+### Get Configuration
+
+```javascript
+Convultra.getConfig()
+// => {
+//   apiKey: "your-api-key",
+//   endpoint: "https://...",
+//   autoTrack: true,
+//   debug: false
+// }
+```
+
+---
+
+## Test Center
+
+The dashboard Test Center provides live debugging:
+
+### Live Event Viewer
+
+**Dashboard → Test → Live Events**
+
+Watch events arrive in real-time:
+1. Open Test Center
+2. Interact with your site
+3. See events appear instantly
+
+### Filter Your Session
+
+To isolate your events:
+
+```javascript
+// Get your session ID
+const sessionId = Convultra.getSessionId()
+console.log('Session:', sessionId)
+```
+
+Paste in the Test Center filter.
+
+### Implementation Checker
+
+**Dashboard → Test → Check Implementation**
+
+Automatically verifies:
+- ✅ SDK loaded
+- ✅ Initialized correctly
+- ✅ Endpoint responding
+- ✅ Events firing
+
+---
+
+## Common Debug Scenarios
+
+### "Events Not Appearing"
+
+<Steps>
+### Check Network Request
+
+Is the request being made?
+- Yes → Check response for errors
+- No → Check SDK initialization
+
+### Check Response
+
+```json
+// Success
+{ "success": true, "event_id": "evt_..." }
+
+// Error
+{ "success": false, "error": "Invalid API key" }
+```
+
+### Check Project Selection
+
+Verify you're viewing the correct project in dashboard.
+</Steps>
+
+---
+
+### "Click IDs Not Captured"
+
+<Steps>
+### Check URL
+
+Does the landing page URL have the click ID?
+
+```
+https://yoursite.com/?gclid=Cj0KCQ...  ✅
+https://yoursite.com/                   ❌
+```
+
+### Check LocalStorage
+
+```javascript
+localStorage.getItem('_cu_gclid')
+// Should return the gclid value
+```
+
+### Check SDK Load Order
+
+SDK must load before redirects or URL changes.
+</Steps>
+
+---
+
+### "Cross-Domain Not Working"
+
+<Steps>
+### Check Link Decoration
+
+```javascript
+// Before click
+document.querySelector('a[href*="other-domain"]').href
+// Should include ?_cvl=eyJz...
+```
+
+### Check _cvl Parameter
+
+On the target domain, check URL:
+```
+https://other-domain.com/page?_cvl=eyJzZXNzaW9u...  ✅
+https://other-domain.com/page                        ❌
+```
+
+### Check Session Continuity
+
+On target domain:
+```javascript
+Convultra.getSessionId()
+// Should match source domain session
+```
+</Steps>
+
+---
+
+## Logging to Server
+
+For production debugging, log to your server:
+
+```javascript
+// Custom error handler
+window.addEventListener('error', (event) => {
+  if (event.message.includes('Convultra')) {
+    fetch('/api/log-error', {
+      method: 'POST',
+      body: JSON.stringify({
+        error: event.message,
+        source: 'convultra',
+        url: window.location.href
+      })
+    })
+  }
+})
+```
+
+---
+
+## Platform-Specific Debugging
+
+### Google Ads
+
+1. Go to **Conversions** → **Summary**
+2. Click your conversion action
+3. Check **Diagnostics** tab
+
+### Meta Ads
+
+1. Go to **Events Manager**
+2. Select your Pixel
+3. Click **Test Events**
+4. Send test conversion from Convultra
+
+### Microsoft Ads
+
+1. Go to **Conversions**
+2. View **Import log**
+3. Check for recent imports and errors
+
+---
+
+## Debugging Checklist
+
+### Pre-Launch
+
+- [ ] SDK loading on all pages
+- [ ] Debug mode shows expected logs
+- [ ] Network requests successful
+- [ ] Click IDs being captured
+- [ ] Conversions appearing in dashboard
+- [ ] Platform integrations forwarding
+
+### Production Issues
+
+- [ ] Check for JavaScript errors
+- [ ] Verify API key matches project
+- [ ] Check endpoint URL
+- [ ] Review integration logs
+- [ ] Test with clean browser profile
+
+---
+
+## Getting Help
+
+If issues persist:
+
+1. **Export debug logs** - Copy console output with debug enabled
+2. **Note browser/version** - Chrome 120, Safari 17, etc.
+3. **Describe expected vs actual** - What should happen vs what happens
+4. **Check status page** - Any known issues
+
+---
+
+## Next Steps
+
+- [Common Issues →](/troubleshooting/common-issues)
+- [FAQ →](/troubleshooting/faq)
+

@@ -1,0 +1,349 @@
+import { Callout } from 'nextra/components'
+
+# How Convultra Works
+
+Convultra uses a multi-layered approach to achieve 95-98% conversion tracking accuracy. This page explains the architecture and technology behind the platform.
+
+## Architecture Overview
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                           Your Website                                   │
+│  ┌─────────────────────────────────────────────────────────────────┐   │
+│  │  Convultra SDK (ultra.js)                                        │   │
+│  │  • Captures click IDs (gclid, fbclid, msclkid)                  │   │
+│  │  • Stores in localStorage (90-day retention)                     │   │
+│  │  • Tracks sessions and page views                                │   │
+│  │  • Sends conversions server-side                                 │   │
+│  └─────────────────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                         Convultra Cloud                                  │
+│  ┌───────────────┐  ┌───────────────┐  ┌───────────────────────────┐   │
+│  │  API Gateway  │──│    Lambda     │──│     Message Queue         │   │
+│  │  (Tracking)   │  │ (Processing)  │  │      (SQS)                │   │
+│  └───────────────┘  └───────────────┘  └───────────────────────────┘   │
+│                            │                        │                    │
+│                            ▼                        ▼                    │
+│  ┌───────────────────────────────┐  ┌────────────────────────────────┐ │
+│  │        Tinybird               │  │      Ad Platform Processors    │ │
+│  │   (Real-time Analytics)       │  │  • Google Ads Processor       │ │
+│  │   • Events storage            │  │  • Meta Ads Processor         │ │
+│  │   • Analytics pipes           │  │  • Microsoft Ads Processor    │ │
+│  │   • Deduplication             │  │  • TikTok Ads Processor       │ │
+│  └───────────────────────────────┘  └────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                        Ad Platforms                                      │
+│  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐       │
+│  │ Google Ads  │ │  Meta Ads   │ │ Microsoft   │ │  TikTok     │       │
+│  │ Offline API │ │ CAPI        │ │ Offline API │ │ Events API  │       │
+│  └─────────────┘ └─────────────┘ └─────────────┘ └─────────────┘       │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Phase 1: Capture
+
+When a user lands on your website, the SDK immediately captures:
+
+### Click IDs
+```javascript
+// Automatically captured from URL parameters
+{
+  gclid: 'Cj0KCQjw...',     // Google Ads
+  fbclid: 'IwAR3x...',       // Meta/Facebook Ads
+  msclkid: 'abc123...',      // Microsoft Ads
+  ttclid: 'xyz789...',       // TikTok Ads
+  twclid: '...',             // Twitter Ads
+  li_fat_id: '...'           // LinkedIn Ads
+}
+```
+
+### UTM Parameters
+```javascript
+{
+  utm_source: 'google',
+  utm_medium: 'cpc',
+  utm_campaign: 'summer-sale',
+  utm_term: 'best widgets',
+  utm_content: 'ad-variant-a'
+}
+```
+
+### Session Data
+```javascript
+{
+  session_id: 'ses_1234567890_abc',
+  landing_page: 'https://yoursite.com/?gclid=...',
+  referrer: 'https://google.com/search?q=...',
+  start_time: 1704067200000,
+  fingerprint: 'fp_8a7b3c2d1e'
+}
+```
+
+### Device & Geo Data
+```javascript
+{
+  user_agent: 'Mozilla/5.0...',
+  screen_resolution: { width: 1920, height: 1080 },
+  viewport: { width: 1440, height: 900 },
+  timezone: 'America/New_York',
+  language: 'en-US',
+  device_type: 'desktop',
+  browser: 'Chrome',
+  os: 'macOS'
+}
+```
+
+---
+
+## Phase 2: Store
+
+All captured data is stored in **localStorage** with 90-day retention:
+
+```javascript
+// Click history - stores all paid clicks with full context
+cvl_click_history: [
+  {
+    id: 'clk_1704067200000_abc123',
+    key: 'gclid',
+    platform: 'google_ads',
+    click_id: 'Cj0KCQjw...',
+    captured_at: '2024-01-01T12:00:00Z',
+    landing_page: 'https://yoursite.com/pricing',
+    utm_source: 'google',
+    utm_campaign: 'summer-sale'
+  }
+]
+
+// Session data - current user session
+cvl_session: {
+  id: 'ses_1704067200000_xyz',
+  startTime: 1704067200000,
+  pageViews: 5,
+  gclid: 'Cj0KCQjw...',
+  landingPage: 'https://yoursite.com/pricing'
+}
+```
+
+<Callout type="info">
+  **Why localStorage?**
+  
+  Unlike cookies which are limited to 7 days on iOS Safari, localStorage persists for 90+ days. This means we can attribute conversions even when users return weeks after clicking an ad.
+</Callout>
+
+---
+
+## Phase 3: Forward
+
+When a conversion occurs, data flows through our processing pipeline:
+
+### Step 1: SDK Sends Conversion
+```javascript
+// Event payload
+{
+  event_id: 'evt_1704067200000_abc',
+  event_type: 'purchase',
+  project_id: 'proj_your_api_key',
+  session_id: 'ses_1704067200000_xyz',
+  
+  // Conversion data
+  value: 99.99,
+  currency: 'USD',
+  
+  // Attribution data (from click history)
+  gclid: 'Cj0KCQjw...',
+  click_history: [...],
+  
+  // Recovery signals
+  recovery_signals: {
+    is_ios_safari: true,
+    has_platform_cookie: false,
+    click_age_days: 14
+  },
+  
+  // User data for Enhanced Conversions
+  user_data: {
+    email: 'hashed_email',
+    phone: 'hashed_phone'
+  }
+}
+```
+
+### Step 2: Lambda Processing
+```
+1. Validate event data
+2. Check deduplication (prevent duplicates)
+3. Classify recovery status
+4. Enrich with geo data
+5. Store in Tinybird
+6. Publish to conversion queue
+```
+
+### Step 3: Platform Forwarding
+
+For each connected platform, a specialized processor formats and sends the conversion:
+
+**Google Ads:**
+```javascript
+{
+  conversionAction: 'customers/123/conversionActions/456',
+  gclid: 'Cj0KCQjw...',
+  conversionDateTime: '2024-01-15 12:30:45-05:00',
+  conversionValue: 99.99,
+  currencyCode: 'USD',
+  orderId: 'ORDER-12345',
+  userIdentifiers: [
+    { hashedEmail: 'sha256_hash' },
+    { hashedPhoneNumber: 'sha256_hash' }
+  ]
+}
+```
+
+**Meta Conversions API:**
+```javascript
+{
+  event_name: 'Purchase',
+  event_time: 1704067200,
+  event_source_url: 'https://yoursite.com/thank-you',
+  action_source: 'website',
+  user_data: {
+    em: ['sha256_email_hash'],
+    ph: ['sha256_phone_hash'],
+    fbc: 'fb.1.1704067200.IwAR3x...',
+    fbp: 'fb.1.1704067200.abc123'
+  },
+  custom_data: {
+    value: 99.99,
+    currency: 'USD',
+    order_id: 'ORDER-12345'
+  }
+}
+```
+
+---
+
+## Phase 4: Recover
+
+Convultra tracks which conversions would have been lost by traditional tracking:
+
+### Recovery Classification
+
+```javascript
+function classifyRecovery(conversion) {
+  const reasons = []
+  
+  // iOS Safari ITP (7-day limit)
+  if (conversion.is_ios_safari && conversion.click_age_days > 7) {
+    reasons.push('ios_itp')
+  }
+  
+  // Cookie expired (30+ days)
+  if (conversion.click_age_days > 30) {
+    reasons.push('cookie_expired')
+  }
+  
+  // Platform cookie missing (user cleared cookies)
+  if (!conversion.has_platform_cookie && conversion.platform_tracking_installed) {
+    reasons.push('cookie_missing')
+  }
+  
+  // Ad blocker detected
+  if (conversion.platform_pixel_blocked) {
+    reasons.push('ad_blocker')
+  }
+  
+  return {
+    is_recovered: reasons.length > 0,
+    recovery_reasons: reasons
+  }
+}
+```
+
+### Recovery Metrics
+
+| Metric | Calculation |
+|--------|-------------|
+| **Recovery Rate** | Recovered Conversions / Total Conversions × 100 |
+| **Tracking Uplift** | Recovered / Platform Would Report × 100 |
+| **Recovered Revenue** | Sum of recovered conversion values |
+
+---
+
+## Deduplication System
+
+Convultra prevents duplicate conversions through a multi-tier system:
+
+```
+Priority 1: Conversion ID (24-hour window)
+├── orderId, leadId, signupId, subscriptionId
+└── Same ID = duplicate blocked
+
+Priority 2: Click ID + Value (1-hour window)
+├── gclid/fbclid/msclkid + event_type + value
+└── Same combination = duplicate blocked
+
+Priority 3: Event ID (5-minute window)
+├── SDK-generated unique event ID
+└── Same ID = duplicate blocked (page refresh protection)
+
+Priority 4: Fingerprint (5-minute window)
+├── Device fingerprint + event characteristics
+└── Similar events = duplicate blocked
+```
+
+---
+
+## Data Flow Summary
+
+```
+User clicks ad → Landing page with gclid
+        │
+        ▼
+SDK captures & stores click ID (localStorage, 90 days)
+        │
+        ▼
+User browses site → Page views tracked
+        │
+        ▼
+User converts → SDK sends conversion with click history
+        │
+        ▼
+Lambda processes → Dedup check → Recovery classification
+        │
+        ▼
+Stored in Tinybird → Published to queue
+        │
+        ▼
+Platform processors → Google Ads API, Meta CAPI, etc.
+        │
+        ▼
+Dashboard displays → Analytics, conversions, recovery stats
+```
+
+---
+
+## Performance
+
+| Metric | Value |
+|--------|-------|
+| **SDK Size** | Under 50KB gzipped |
+| **Page Load Impact** | Under 50ms |
+| **Tracking Latency** | Under 200ms |
+| **Platform Forwarding** | Under 5 minutes |
+| **Dashboard Updates** | Real-time |
+
+---
+
+## Next Steps
+
+- [SDK Configuration →](/sdk/configuration)
+- [Deduplication Details →](/advanced/deduplication)
+- [Attribution Models →](/advanced/attribution-models)
+

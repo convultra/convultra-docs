@@ -1,0 +1,255 @@
+import { Callout } from 'nextra/components'
+
+# Deduplication System
+
+Convultra uses a multi-tier deduplication system to prevent double-counting conversions.
+
+## Why Deduplication Matters
+
+Without deduplication, conversions can be counted multiple times:
+- Page refresh after purchase
+- User clicking "back" to confirmation page
+- Network retries
+- Multiple tracking sources (client + server)
+
+This leads to:
+- Inflated conversion numbers
+- Inaccurate ROAS calculations
+- Wasted ad spend on over-attributed campaigns
+
+---
+
+## Deduplication Tiers
+
+Convultra applies four levels of deduplication:
+
+### Tier 1: Conversion ID (Order ID)
+
+**Window:** 24 hours (configurable)
+
+The primary deduplication method using your provided order/transaction ID:
+
+```javascript
+Convultra.trackPurchase({
+  orderId: 'ORD-12345', // Used for deduplication
+  value: 99.99
+})
+```
+
+| Check | Result |
+|-------|--------|
+| Same `orderId` within 24h | ❌ Duplicate |
+| Different `orderId` | ✅ Unique |
+
+<Callout>
+  Always provide an `orderId` for purchases. It's the most reliable deduplication method.
+</Callout>
+
+---
+
+### Tier 2: Event ID
+
+**Window:** 5 minutes (configurable)
+
+Unique identifier generated per event:
+
+```javascript
+// Automatically generated
+{
+  event_id: 'evt_1704067200000_abc123',
+  event_type: 'purchase',
+  ...
+}
+```
+
+Catches:
+- Exact duplicate requests (network retries)
+- Rapid-fire button clicks
+
+---
+
+### Tier 3: Click ID + Value
+
+**Window:** 1 hour (configurable)
+
+Same click ID + same value = likely duplicate:
+
+```javascript
+// Scenario: User refreshes thank you page
+{
+  gclid: 'Cj0KCQ...',
+  value: 99.99
+}
+// Second request with same gclid + value = duplicate
+```
+
+| First Event | Second Event | Result |
+|-------------|--------------|--------|
+| gclid=abc, value=99 | gclid=abc, value=99 | ❌ Duplicate |
+| gclid=abc, value=99 | gclid=abc, value=50 | ✅ Unique |
+| gclid=abc, value=99 | gclid=xyz, value=99 | ✅ Unique |
+
+---
+
+### Tier 4: Browser Fingerprint
+
+**Window:** 5 minutes (configurable)
+
+Same fingerprint + same value within short window:
+
+```javascript
+{
+  fingerprint: 'fp_a1b2c3...',
+  value: 99.99
+}
+```
+
+Catches:
+- Users without click IDs
+- Direct traffic conversions
+
+---
+
+## Deduplication Flow
+
+```
+Event Received
+      ↓
+[1] Check Order ID (24h window)
+      ↓ not duplicate
+[2] Check Event ID (5min window)
+      ↓ not duplicate
+[3] Check Click ID + Value (1h window)
+      ↓ not duplicate
+[4] Check Fingerprint + Value (5min window)
+      ↓ not duplicate
+✅ Process as unique conversion
+```
+
+---
+
+## Configuration
+
+### Dashboard Settings
+
+**Dashboard → Settings → Deduplication**
+
+| Setting | Default | Range |
+|---------|---------|-------|
+| Conversion ID Window | 24 hours | 1h - 7 days |
+| Event ID Window | 5 minutes | 1min - 1h |
+| Click ID Window | 1 hour | 5min - 24h |
+| Fingerprint Window | 5 minutes | 1min - 1h |
+
+### SDK Configuration
+
+```javascript
+Convultra.init({
+  apiKey: 'your-key',
+  endpoint: 'https://your-endpoint.com',
+  deduplication: {
+    orderIdWindow: 86400,     // 24 hours in seconds
+    eventIdWindow: 300,       // 5 minutes
+    clickIdWindow: 3600,      // 1 hour
+    fingerprintWindow: 300    // 5 minutes
+  }
+})
+```
+
+---
+
+## Best Practices
+
+### 1. Always Use Order IDs
+
+```javascript
+// ✅ Good
+Convultra.trackPurchase({
+  orderId: 'ORD-12345',
+  value: 99.99
+})
+
+// ❌ Bad - no orderId
+Convultra.trackPurchase({
+  value: 99.99
+})
+```
+
+### 2. Use Unique Order IDs
+
+```javascript
+// ✅ Good - unique per transaction
+orderId: `ORD-${timestamp}-${random}`
+
+// ❌ Bad - reused IDs
+orderId: 'purchase'
+```
+
+### 3. Include Lead IDs
+
+For leads, use a unique identifier:
+
+```javascript
+Convultra.trackLead({
+  leadId: `LEAD-${formId}-${timestamp}`,
+  value: 100
+})
+```
+
+---
+
+## Viewing Duplicates
+
+### Dashboard
+
+**Dashboard → Conversions → Duplicates**
+
+Shows:
+- Original event
+- Duplicate attempts
+- Deduplication tier triggered
+
+### API
+
+```javascript
+// Query duplicates
+GET /v1/events/duplicates?date_from=2024-01-01
+```
+
+---
+
+## Platform Deduplication
+
+In addition to Convultra's deduplication, each ad platform has its own:
+
+| Platform | Dedup Field | How Used |
+|----------|-------------|----------|
+| Google Ads | `orderId` | Google dedupes by order ID |
+| Meta Ads | `event_id` + `order_id` | Meta dedupes by both |
+| Microsoft | `orderId` | Microsoft dedupes by order ID |
+
+Convultra sends these fields to enable platform-side deduplication too.
+
+---
+
+## Troubleshooting
+
+### Duplicates Still Appearing
+
+1. **Check orderId uniqueness** - Are IDs truly unique?
+2. **Check time windows** - Is the gap between events too long?
+3. **Check multi-source** - Are you tracking same event client + server?
+
+### Legitimate Events Marked Duplicate
+
+1. **Extend time windows** - If legitimate events are within window
+2. **Check value differences** - Small value changes should be unique
+3. **Verify orderId format** - Ensure IDs are properly generated
+
+---
+
+## Next Steps
+
+- [Attribution Models →](/advanced/attribution-models)
+- [Conversion Recovery →](/advanced/conversion-recovery)
+

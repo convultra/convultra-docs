@@ -1,0 +1,277 @@
+import { Callout, Steps, Tabs, Tab } from 'nextra/components'
+
+# Quick Start
+
+Get Convultra tracking conversions in 5 minutes.
+
+<Steps>
+### Add the SDK
+
+Add this script to your website's `<head>`:
+
+```html copy filename="index.html"
+<script
+  src="https://cdn.convultra.com/ultra.min.js"
+  data-convultra-key="proj_your_api_key"
+></script>
+```
+
+<Callout>
+  Get your API key from the [Convultra Dashboard](https://app.convultra.com) → Projects → Your Project → Settings
+</Callout>
+
+### Track a Conversion
+
+Add conversion tracking to your thank-you page or success event:
+
+<Tabs items={['JavaScript', 'Data Attributes', 'Pixel (No-JS)']}>
+  <Tab>
+```javascript copy
+// Track a purchase conversion
+Convultra.trackPurchase({
+  orderId: 'ORDER-12345',
+  value: 99.99,
+  currency: 'USD'
+})
+
+// Track a lead conversion
+Convultra.trackLead({
+  leadId: 'LEAD-67890',
+  value: 50,
+  formName: 'Contact Form'
+})
+
+// Track a signup conversion
+Convultra.trackSignup({
+  userId: 'user_abc123',
+  plan: 'pro',
+  method: 'email'
+})
+```
+  </Tab>
+  <Tab>
+```html copy
+<!-- Purchase button with data attributes -->
+<button
+  data-convultra-track="purchase"
+  data-convultra-order-id="ORDER-12345"
+  data-convultra-value="99.99"
+  data-convultra-currency="USD"
+>
+  Complete Purchase
+</button>
+
+<!-- Lead form with data attributes -->
+<form
+  data-convultra-track="lead"
+  data-convultra-form-name="Contact Form"
+  data-convultra-value="50"
+>
+  <input type="email" name="email" required />
+  <button type="submit">Submit</button>
+</form>
+```
+  </Tab>
+  <Tab>
+```html copy
+<!-- No-JS pixel tracking for email or server-rendered pages -->
+<img 
+  src="https://api.convultra.com/v1/pixel?pid=proj_your_api_key&e=purchase&value=99.99&oid=ORDER-12345"
+  alt=""
+  style="position:absolute;width:1px;height:1px;border:0;"
+/>
+```
+  </Tab>
+</Tabs>
+
+### Connect Ad Platforms
+
+Go to the [Dashboard](https://app.convultra.com) → Integrations and connect your ad accounts:
+
+1. **Google Ads** - Click "Connect" and authorize
+2. **Meta Ads** - Click "Connect" and authorize
+3. **Microsoft Ads** - Click "Connect" and authorize
+
+Map your conversion events to the appropriate conversion actions in each platform.
+
+### View Your Data
+
+Go to Dashboard → Analytics to see:
+
+- **Traffic Analytics** - Visitors, page views, bounce rate
+- **Conversions** - All conversions with attribution data
+- **Recovery Stats** - Conversions that would have been lost
+
+</Steps>
+
+---
+
+## Complete Example
+
+Here's a complete e-commerce thank-you page:
+
+```html copy filename="thank-you.html"
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Thank You for Your Order</title>
+  
+  <!-- Convultra SDK -->
+  <script
+    src="https://cdn.convultra.com/ultra.min.js"
+    data-convultra-key="proj_your_api_key"
+  ></script>
+</head>
+<body>
+  <h1>Thank You for Your Purchase!</h1>
+  <p>Order #12345 confirmed</p>
+
+  <script>
+    // Track the purchase conversion
+    Convultra.trackPurchase({
+      orderId: 'ORDER-12345',
+      value: 149.99,
+      currency: 'USD',
+      items: [
+        { sku: 'PROD-001', name: 'Pro Widget', price: 149.99 }
+      ]
+    })
+
+    // Optional: Add user data for Enhanced Conversions
+    Convultra.identify('user_123', {
+      email: 'customer@example.com',
+      firstName: 'John',
+      lastName: 'Doe'
+    })
+  </script>
+</body>
+</html>
+```
+
+---
+
+## Lead Generation Example
+
+For lead generation (forms, contact requests):
+
+```html copy filename="form.html"
+<form id="contact-form">
+  <input type="text" name="name" placeholder="Your Name" required />
+  <input type="email" name="email" placeholder="Email" required />
+  <input type="tel" name="phone" placeholder="Phone" />
+  <button type="submit">Get a Quote</button>
+</form>
+
+<script>
+document.getElementById('contact-form').addEventListener('submit', function(e) {
+  e.preventDefault()
+  
+  const formData = new FormData(this)
+  
+  // Track the lead with Enhanced Conversions data
+  Convultra.trackConversion('lead', 
+    {
+      leadId: 'LEAD_' + Date.now(),
+      value: 100,
+      formName: 'Contact Form',
+      source: 'website'
+    },
+    {
+      email: formData.get('email'),
+      phone: formData.get('phone'),
+      firstName: formData.get('name').split(' ')[0],
+      lastName: formData.get('name').split(' ').slice(1).join(' ')
+    }
+  )
+  
+  // Submit form...
+  this.submit()
+})
+</script>
+```
+
+---
+
+## SaaS Signup Example
+
+For trial signups and registrations:
+
+```javascript copy filename="signup-handler.js"
+async function handleSignup(userData) {
+  // Create user in your system
+  const user = await createUser(userData)
+  
+  // Track signup conversion with Enhanced Conversions
+  Convultra.trackConversion('signup',
+    {
+      userId: user.id,
+      signupId: 'SIGNUP_' + user.id,
+      plan: 'trial',
+      method: 'email'
+    },
+    {
+      email: userData.email,
+      firstName: userData.firstName,
+      lastName: userData.lastName
+    }
+  )
+  
+  // Redirect to dashboard
+  window.location.href = '/dashboard'
+}
+```
+
+---
+
+## What Happens Next
+
+When a conversion is tracked:
+
+```
+1. 🎯 SDK captures conversion + click IDs (gclid, fbclid, etc.)
+         ↓
+2. 📡 Data sent to Convultra servers
+         ↓
+3. 🔍 Deduplication check (prevents duplicates)
+         ↓
+4. 💾 Stored in your analytics database
+         ↓
+5. 📤 Forwarded to connected ad platforms (Google Ads, Meta, etc.)
+         ↓
+6. 📊 Appears in your dashboard within minutes
+```
+
+---
+
+## Verify It's Working
+
+### 1. Check Browser Console
+
+With debug mode, you'll see:
+
+```
+[Convultra] 🚀 Convultra initialized - Ultra tracking active!
+[Convultra] Event tracked: purchase { orderId: 'ORDER-12345', value: 99.99 }
+```
+
+### 2. Check Network Tab
+
+Look for successful POST requests to the tracking endpoint.
+
+### 3. Check Dashboard
+
+Go to **Dashboard → Conversions** to see your test conversion.
+
+### 4. Use Test Center
+
+Navigate to **Dashboard → Test Center** for a safe testing environment that won't send conversions to ad platforms.
+
+---
+
+## Next Steps
+
+- [Configure SDK options →](/sdk/configuration)
+- [Track more event types →](/sdk/tracking-events)
+- [Set up Enhanced Conversions →](/sdk/enhanced-conversions)
+- [Connect ad platforms →](/integrations/google-ads)
+

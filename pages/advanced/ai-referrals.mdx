@@ -1,0 +1,237 @@
+import { Callout } from 'nextra/components'
+
+# AI Referral Tracking
+
+Track and attribute traffic from AI platforms like ChatGPT, Claude, and Perplexity.
+
+## The Rise of AI Traffic
+
+AI platforms are becoming significant traffic sources:
+
+- Users ask AI for recommendations
+- AI cites your content as a source
+- Users click through to your site
+
+```
+User asks ChatGPT: "What's the best analytics tool?"
+         ↓
+ChatGPT mentions your product
+         ↓
+User clicks link to your site
+         ↓
+Convultra tracks as AI Referral
+```
+
+---
+
+## Supported AI Platforms
+
+| Platform | Referrer Detection |
+|----------|-------------------|
+| ChatGPT | `chatgpt.com` |
+| Claude | `claude.ai` |
+| Perplexity | `perplexity.ai` |
+| Google Bard/Gemini | `bard.google.com`, `gemini.google.com` |
+| Bing Copilot | `bing.com/chat` |
+| You.com | `you.com` |
+| Phind | `phind.com` |
+
+---
+
+## Viewing AI Traffic
+
+### AI Referrals Dashboard
+
+**Dashboard → Analytics → AI Referrals**
+
+| Metric | Description |
+|--------|-------------|
+| Total AI Visitors | Unique visitors from AI platforms |
+| Sessions | Total sessions from AI |
+| Pageviews | Pages viewed from AI traffic |
+| Conversions | Conversions attributed to AI |
+| Conversion Rate | AI traffic conversion rate |
+
+### By Platform
+
+See breakdown by AI platform:
+
+| Platform | Visitors | Conversions | Conv. Rate |
+|----------|----------|-------------|------------|
+| ChatGPT | 1,200 | 45 | 3.75% |
+| Perplexity | 800 | 38 | 4.75% |
+| Claude | 400 | 18 | 4.50% |
+
+<Callout>
+  AI referral traffic often converts at higher rates than other sources because users arrive with high intent after specific queries.
+</Callout>
+
+---
+
+## AI Traffic vs AI Bots
+
+Important distinction:
+
+| Type | What It Is | Counted In |
+|------|------------|------------|
+| **AI Referral** | Humans clicking from AI platforms | Main analytics ✅ |
+| **AI Bot** | AI crawlers indexing your site | Bot analytics only |
+
+AI Referrals are human visitors who were referred by an AI platform.
+AI Bots are the AI systems crawling your site for training/indexing.
+
+---
+
+## How Detection Works
+
+### Referrer Analysis
+
+The SDK checks the `document.referrer`:
+
+```javascript
+// AI platform referrers
+const aiReferrers = [
+  'chatgpt.com',
+  'claude.ai',
+  'perplexity.ai',
+  'bard.google.com',
+  'gemini.google.com',
+  'you.com',
+  'phind.com'
+]
+
+// On page load
+if (aiReferrers.some(ai => document.referrer.includes(ai))) {
+  // Track as AI referral
+}
+```
+
+### Source Attribution
+
+AI referrals get special source attribution:
+
+```javascript
+{
+  source: 'chatgpt',      // AI platform
+  medium: 'ai_referral',  // Special medium
+  channel: 'AI Referral'  // Channel group
+}
+```
+
+---
+
+## Conversion Attribution
+
+Conversions from AI traffic are tracked like any other source:
+
+```
+ChatGPT referral → Land on site → Browse → Convert
+                                            ↓
+                            Attributed to ChatGPT (AI Referral)
+```
+
+### In Platform Reporting
+
+AI referrals appear in:
+- **Sources**: chatgpt, claude, perplexity, etc.
+- **Mediums**: ai_referral
+- **Channels**: AI Referral
+
+---
+
+## Analytics Integration
+
+### Compare to Other Sources
+
+Compare AI referral performance:
+
+| Source | Visitors | Conv. Rate | Avg. Value |
+|--------|----------|------------|------------|
+| Google (organic) | 10,000 | 2.1% | $45 |
+| Facebook (paid) | 5,000 | 1.8% | $52 |
+| **ChatGPT (AI)** | **1,200** | **3.8%** | **$65** |
+| Direct | 3,000 | 3.2% | $48 |
+
+### Trends Over Time
+
+**Dashboard → Analytics → AI Referrals → Trend**
+
+Track AI traffic growth:
+- Weekly/monthly comparison
+- Platform distribution changes
+- Conversion rate trends
+
+---
+
+## Optimizing for AI Referrals
+
+### Content Strategy
+
+AI platforms prefer:
+- Clear, factual content
+- Structured data (lists, tables)
+- Authoritative sources
+- Recently updated content
+
+### Monitor What AI Sees
+
+Use the **Bot Analytics → AI Bots** view to see:
+- Which pages AI is crawling
+- How often AI indexes your content
+- Content changes AI might pick up
+
+### Landing Page Optimization
+
+AI referral traffic often has:
+- High intent (specific query led them)
+- Context from AI conversation
+- Higher expectations for relevance
+
+Optimize landing pages for:
+- Quick value delivery
+- Clear CTAs
+- Fast load times
+
+---
+
+## API Access
+
+Query AI referral data via API:
+
+```javascript
+// Get AI referral overview
+GET /v1/analytics/ai-referrals?date_from=2024-01-01
+
+// Response
+{
+  "total_visitors": 2400,
+  "total_conversions": 101,
+  "conversion_rate": 4.21,
+  "by_platform": [
+    { "platform": "chatgpt", "visitors": 1200, "conversions": 45 },
+    { "platform": "perplexity", "visitors": 800, "conversions": 38 },
+    { "platform": "claude", "visitors": 400, "conversions": 18 }
+  ]
+}
+```
+
+---
+
+## Future of AI Referrals
+
+AI referrals are expected to grow significantly:
+
+- More users using AI for research
+- AI platforms adding more web citations
+- Voice assistants integrating AI responses
+
+Convultra will continue adding detection for new AI platforms.
+
+---
+
+## Next Steps
+
+- [Conversion Recovery →](/advanced/conversion-recovery)
+- [Bot Detection →](/advanced/bot-detection)
+- [Analytics →](/dashboard/analytics)
+

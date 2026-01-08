@@ -1,0 +1,200 @@
+import { Cards, Card, Callout } from 'nextra/components'
+
+<div className="hero-section animate-fade-in">
+  <h1 className="hero-title">Track Every Conversion. Ultra Accurate.</h1>
+  <p className="hero-subtitle">
+    Server-side conversion tracking that captures 95-98% of conversions,<br />
+    compared to 60-70% with traditional pixels.
+  </p>
+</div>
+
+## The Problem
+
+Traditional client-side pixels are broken:
+
+| Issue | Impact |
+|-------|--------|
+| **Ad Blockers** | 30-40% of users block tracking scripts |
+| **Safari ITP** | Cookies expire in 7 days |
+| **iOS 14.5+** | Most users opt out of tracking |
+| **Privacy Browsers** | Block all third-party requests |
+
+**Result:** You're losing 30-40% of your conversion data.
+
+---
+
+## The Solution
+
+Convultra uses server-side tracking to bypass these limitations:
+
+<div className="feature-grid">
+  <div className="feature-card">
+    <div className="feature-icon">🎯</div>
+    <h3 className="feature-title">95-98% Accuracy</h3>
+    <p className="feature-description">Server-side tracking captures conversions that client-side pixels miss.</p>
+  </div>
+  <div className="feature-card">
+    <div className="feature-icon">🛡️</div>
+    <h3 className="feature-title">Ad Blocker Proof</h3>
+    <p className="feature-description">Server-to-server communication. Nothing for ad blockers to block.</p>
+  </div>
+  <div className="feature-card">
+    <div className="feature-icon">🔗</div>
+    <h3 className="feature-title">90-Day Attribution</h3>
+    <p className="feature-description">Store click IDs for up to 90 days, far beyond cookie limits.</p>
+  </div>
+  <div className="feature-card">
+    <div className="feature-icon">🔄</div>
+    <h3 className="feature-title">Auto-Deduplication</h3>
+    <p className="feature-description">Multi-tier system prevents double-counting automatically.</p>
+  </div>
+  <div className="feature-card">
+    <div className="feature-icon">📊</div>
+    <h3 className="feature-title">All Platforms</h3>
+    <p className="feature-description">One SDK, automatic forwarding to Google, Meta, Microsoft, TikTok.</p>
+  </div>
+  <div className="feature-card">
+    <div className="feature-icon">🤖</div>
+    <h3 className="feature-title">AI Referral Tracking</h3>
+    <p className="feature-description">Track traffic from ChatGPT, Claude, Perplexity, and more.</p>
+  </div>
+</div>
+
+---
+
+## Quick Start
+
+Get started in 5 minutes:
+
+### 1. Add the SDK
+
+```html copy
+<script 
+  src="https://cdn.convultra.com/ultra.min.js"
+  data-convultra-api-key="YOUR_API_KEY"
+  data-convultra-endpoint="https://your-endpoint.com"
+></script>
+```
+
+### 2. Track Conversions
+
+```javascript copy
+// Track a purchase
+Convultra.trackPurchase({
+  orderId: 'ORD-12345',
+  value: 99.99,
+  currency: 'USD'
+})
+```
+
+### 3. Connect Platforms
+
+Go to **Dashboard → Integrations** and connect your ad accounts.
+
+That's it! Conversions are now forwarded to all connected platforms.
+
+<Cards>
+  <Card title="📖 Full Installation Guide" href="/getting-started/installation" />
+  <Card title="⚡ Quick Start Tutorial" href="/getting-started/quick-start" />
+</Cards>
+
+---
+
+## Key Features
+
+### 🎯 Server-Side Tracking
+
+Your tracking endpoint, your rules. No third-party scripts to block.
+
+### 🔐 Enhanced Conversions
+
+Send hashed customer data for 85-95% match rates:
+
+```javascript copy
+Convultra.trackConversion('purchase',
+  { orderId: 'ORD-123', value: 99.99 },
+  { email: 'customer@example.com', phone: '+1234567890' }
+)
+```
+
+### 🌐 Cross-Domain Tracking
+
+Track users seamlessly across multiple domains:
+
+```javascript copy
+Convultra.init({
+  crossDomainDomains: ['site.com', 'checkout.site.com']
+})
+```
+
+### 📈 Privacy-Friendly Analytics
+
+Plausible-style analytics without cookies:
+- Unique visitors & pageviews
+- Traffic sources & campaigns
+- Geographic & device breakdown
+- Bot & AI crawler detection
+
+---
+
+## Platform Integrations
+
+<Cards>
+  <Card title="Google Ads" href="/integrations/google-ads">
+    Offline Conversions API
+  </Card>
+  <Card title="Meta Ads" href="/integrations/meta-ads">
+    Conversions API (CAPI)
+  </Card>
+  <Card title="Microsoft Ads" href="/integrations/microsoft-ads">
+    Offline Conversions
+  </Card>
+  <Card title="TikTok Ads" href="/integrations/tiktok-ads">
+    Events API
+  </Card>
+</Cards>
+
+---
+
+## Documentation
+
+<Cards>
+  <Card title="Getting Started" href="/getting-started/introduction">
+    Installation, quick start, and how it works
+  </Card>
+  <Card title="SDK Reference" href="/sdk/configuration">
+    Configuration, tracking methods, and APIs
+  </Card>
+  <Card title="Dashboard" href="/dashboard/overview">
+    Analytics, conversions, and settings
+  </Card>
+  <Card title="Troubleshooting" href="/troubleshooting/common-issues">
+    Common issues and debugging guides
+  </Card>
+</Cards>
+
+---
+
+## Why Convultra?
+
+<Callout type="info">
+  **Recover 30-40% more conversions** that traditional pixels miss due to ad blockers, ITP, and privacy browsers.
+</Callout>
+
+| Feature | Client-Side Pixels | Convultra |
+|---------|-------------------|-----------|
+| Ad Blocker Resistant | ❌ | ✅ |
+| ITP/Cookie Handling | ❌ | ✅ |
+| Enhanced Conversions | Manual | ✅ Automatic |
+| Multi-Platform Forward | Manual | ✅ Automatic |
+| Deduplication | Manual | ✅ Automatic |
+| Conversion Recovery | ❌ | ✅ |
+| AI Referral Tracking | ❌ | ✅ |
+
+---
+
+Ready to track every conversion?
+
+<Cards>
+  <Card title="Get Started →" href="/getting-started/introduction" />
+</Cards>

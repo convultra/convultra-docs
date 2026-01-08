@@ -1,0 +1,190 @@
+import { Callout, Steps } from 'nextra/components'
+
+# Microsoft Ads Integration
+
+Send conversions to Microsoft Advertising via the Offline Conversions API.
+
+## Prerequisites
+
+- Active Microsoft Advertising account
+- Admin access to the account
+- Offline conversion goals configured
+
+---
+
+## Setup
+
+<Steps>
+### Register Azure Application
+
+1. Go to [Azure Portal](https://portal.azure.com/)
+2. Navigate to **Azure Active Directory** → **App registrations**
+3. Click **New registration**
+4. Configure:
+   - Name: "Convultra Microsoft Ads"
+   - Account types: "Accounts in any organizational directory and personal Microsoft accounts"
+   - Redirect URI: Will be provided in Convultra setup
+
+### Get Developer Token
+
+1. Go to [Microsoft Advertising](https://ads.microsoft.com/)
+2. Navigate to **Tools** → **Developer Portal**
+3. Request a developer token
+4. Wait for approval (can take up to 5 business days)
+
+### Connect in Convultra
+
+1. Go to **Dashboard → Integrations**
+2. Click **Connect Microsoft Ads**
+3. Enter your Client ID and Client Secret
+4. Complete OAuth authorization
+
+### Create Conversion Goals
+
+1. In Microsoft Ads, go to **Conversions**
+2. Create **Offline Conversion** goals:
+   - "Convultra Purchase"
+   - "Convultra Lead"
+   - "Convultra Signup"
+
+### Map Conversion Goals
+
+In Convultra, map your events to Microsoft Ads goals:
+
+| Convultra Event | Microsoft Ads Goal |
+|-----------------|-------------------|
+| `purchase` | Convultra Purchase |
+| `lead` | Convultra Lead |
+| `signup` | Convultra Signup |
+</Steps>
+
+---
+
+## How Data is Sent
+
+Convultra sends conversions via the Microsoft Ads API:
+
+```javascript
+// What Convultra sends
+{
+  conversionName: 'Convultra Purchase',
+  conversionTime: '2024-01-15T14:30:45Z',
+  conversionValue: 99.99,
+  currencyCode: 'USD',
+  
+  // Attribution
+  msclkid: 'abc123def456...',
+  
+  // Enhanced Matching
+  HashedEmailAddress: 'sha256_e3b0c44298fc1c14...',
+  HashedPhoneNumber: 'sha256_a7b9c3d4e5f6...'
+}
+```
+
+---
+
+## MSCLKID Attribution
+
+Microsoft uses `msclkid` for click attribution:
+
+```
+User clicks ad → https://yoursite.com/?msclkid=abc123...
+         ↓
+Convultra captures MSCLKID → Stores for 90 days
+         ↓
+User converts → MSCLKID included in conversion
+         ↓
+Microsoft matches to original ad click
+```
+
+<Callout>
+  Ensure auto-tagging is enabled in Microsoft Ads: **Account Settings** → **URL Options** → Enable auto-tagging
+</Callout>
+
+---
+
+## Enhanced Matching
+
+Include hashed user data for better attribution:
+
+```javascript copy
+Convultra.trackConversion('purchase',
+  {
+    orderId: 'ORDER-12345',
+    value: 99.99,
+    currency: 'USD'
+  },
+  {
+    email: 'customer@example.com',
+    phone: '+1234567890'
+  }
+)
+```
+
+Data sent (hashed):
+- `HashedEmailAddress`
+- `HashedPhoneNumber`
+
+---
+
+## Monitoring
+
+### Check in Convultra
+
+**Dashboard → Integrations → Microsoft Ads → View Logs**
+
+### Check in Microsoft Ads
+
+1. Go to **Conversions**
+2. Select your conversion goal
+3. Check for recent conversions
+
+<Callout type="info">
+  Offline conversions can take up to 24 hours to appear in Microsoft Ads reporting.
+</Callout>
+
+---
+
+## Troubleshooting
+
+### "Token refresh failed"
+
+**Cause**: OAuth token expired or revoked.
+
+**Solution**: Reconnect the integration.
+
+### "Developer token invalid"
+
+**Cause**: Token not approved or revoked.
+
+**Solution**: Check Microsoft Advertising Developer Portal for token status.
+
+### "Conversion goal not found"
+
+**Cause**: Goal doesn't exist or name mismatch.
+
+**Solution**: Verify goal exists in Microsoft Ads and re-map in Convultra.
+
+### Low Match Rate
+
+**Cause**: Missing MSCLKID or user data.
+
+**Solutions**:
+1. Enable auto-tagging in Microsoft Ads
+2. Add email/phone to conversion calls
+
+---
+
+## API Limits
+
+- Rate limit: 1000 requests per minute per account
+- Batch size: Up to 1000 conversions per request
+- Attribution window: 90 days (default)
+
+---
+
+## Next Steps
+
+- [TikTok Ads Integration →](/integrations/tiktok-ads)
+- [Enhanced Conversions →](/sdk/enhanced-conversions)
+

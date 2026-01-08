@@ -1,0 +1,299 @@
+import { Callout, Tabs, Tab } from 'nextra/components'
+
+# Attribution Models
+
+Understand how Convultra attributes conversions to marketing touchpoints.
+
+## What is Attribution?
+
+Attribution answers the question: "Which marketing touchpoint deserves credit for this conversion?"
+
+```
+Ad Click → Visit → ... → Return Visit → Conversion
+   ↑                                         ↑
+Which touchpoint caused the conversion?
+```
+
+---
+
+## Attribution Models
+
+### Last Click (Default)
+
+The last touchpoint before conversion gets 100% credit.
+
+```
+Facebook Ad → Google Ad → Conversion
+                  ↑
+            100% credit
+```
+
+**Best for:**
+- Simple reporting
+- Campaigns focused on immediate action
+
+---
+
+### First Click
+
+The first touchpoint gets 100% credit.
+
+```
+Facebook Ad → Google Ad → Conversion
+     ↑
+100% credit
+```
+
+**Best for:**
+- Awareness campaigns
+- Understanding acquisition sources
+
+---
+
+### Linear
+
+All touchpoints share credit equally.
+
+```
+Facebook Ad → Google Ad → Email → Conversion
+    33%          33%       33%
+```
+
+**Best for:**
+- Long sales cycles
+- B2B marketing
+
+---
+
+### Time Decay
+
+Touchpoints closer to conversion get more credit.
+
+```
+Facebook Ad → Google Ad → Email → Conversion
+    10%          30%       60%
+```
+
+**Best for:**
+- Understanding momentum
+- Multi-touch journeys
+
+---
+
+### Position Based (U-Shaped)
+
+First and last touchpoints get 40% each, middle splits remaining 20%.
+
+```
+Facebook Ad → Google Ad → Email → Conversion
+    40%          20%       40%
+```
+
+**Best for:**
+- Balancing acquisition and conversion
+- Comprehensive view
+
+---
+
+## Platform Attribution
+
+Each ad platform uses its own attribution model:
+
+| Platform | Default Model | Window |
+|----------|---------------|--------|
+| Google Ads | Data-Driven / Last Click | 30-90 days |
+| Meta Ads | Last Click | 7-28 days |
+| Microsoft | Last Click | 30-90 days |
+| TikTok | Last Click | 7-28 days |
+
+Convultra sends conversions to platforms using their required attribution method.
+
+---
+
+## Click ID Attribution
+
+### How Click IDs Work
+
+```
+1. User clicks ad with gclid=ABC123
+         ↓
+2. Convultra stores gclid for 90 days
+         ↓
+3. User converts days later
+         ↓
+4. Convultra sends conversion with gclid=ABC123
+         ↓
+5. Google attributes to original ad click
+```
+
+### Supported Click IDs
+
+| Platform | Click ID | Storage Duration |
+|----------|----------|-----------------|
+| Google | `gclid` | 90 days |
+| Meta | `fbclid` | 28 days |
+| Microsoft | `msclkid` | 90 days |
+| TikTok | `ttclid` | 28 days |
+| Twitter | `twclid` | 30 days |
+| LinkedIn | `li_fat_id` | 30 days |
+
+---
+
+## Attribution Windows
+
+### What's an Attribution Window?
+
+The maximum time between click and conversion:
+
+```
+Click → [1 day] → [7 days] → [30 days] → [90 days]
+                                    ↑
+                           Attribution Window
+                   Conversions after this don't count
+```
+
+### Configuring Windows
+
+**Dashboard → Settings → Attribution**
+
+| Setting | Options |
+|---------|---------|
+| Google Ads | 7, 30, 60, 90 days |
+| Meta Ads | 1, 7, 28 days |
+| Default | 30 days |
+
+---
+
+## Multi-Touch Journeys
+
+### Viewing the Journey
+
+**Dashboard → Conversions → [Click conversion] → View Journey**
+
+Shows all touchpoints:
+
+| Touchpoint | Time | Source |
+|------------|------|--------|
+| Entry | Jan 1, 10:00 | Google Ads (gclid) |
+| Pageview | Jan 1, 10:02 | - |
+| Exit | Jan 1, 10:05 | - |
+| Return | Jan 5, 14:00 | Facebook Ads (fbclid) |
+| Pageview | Jan 5, 14:10 | - |
+| **Purchase** | Jan 5, 14:15 | **Attributed: Facebook** |
+
+### Multi-Platform Attribution
+
+When a user has multiple click IDs:
+
+```javascript
+// User journey
+{ gclid: 'ABC', timestamp: 'Jan 1' }  // Google ad
+{ fbclid: 'XYZ', timestamp: 'Jan 5' }  // Facebook ad
+{ conversion: true, timestamp: 'Jan 5' }  // Purchase
+
+// Attribution
+Google Ads → Gets conversion with gclid (first touch)
+Meta Ads → Gets conversion with fbclid (last touch)
+```
+
+<Callout>
+  Convultra forwards conversions to all platforms with valid click IDs, letting each platform use its own attribution model.
+</Callout>
+
+---
+
+## Platform Attribution Metrics
+
+### Dashboard View
+
+**Dashboard → Analytics → Attribution**
+
+| Metric | Description |
+|--------|-------------|
+| **Conversions by Platform** | How platforms attribute |
+| **Overlap** | Users with multiple click IDs |
+| **First Touch vs Last Touch** | Compare models |
+
+### Comparison View
+
+```
+                    | Google | Meta | Direct |
+First Touch         |   45%  |  30% |   25%  |
+Last Touch          |   35%  |  45% |   20%  |
+Linear              |   40%  |  35% |   25%  |
+```
+
+---
+
+## Time to Convert
+
+### Distribution
+
+**Dashboard → Analytics → Attribution → Time to Convert**
+
+Shows how long conversions take:
+
+| Time Bucket | Conversions |
+|-------------|-------------|
+| Same day | 40% |
+| 1-7 days | 35% |
+| 8-14 days | 15% |
+| 15-30 days | 8% |
+| 30+ days | 2% |
+
+### Insights
+
+- **Short cycle**: Focus on immediate conversion
+- **Long cycle**: Invest in retargeting
+- **Variable**: Segment by product/price
+
+---
+
+## Touchpoint Depth
+
+How many touchpoints before conversion:
+
+| Touchpoints | Conversions |
+|-------------|-------------|
+| 1 | 45% |
+| 2 | 25% |
+| 3-5 | 20% |
+| 6+ | 10% |
+
+---
+
+## Best Practices
+
+### 1. Match Platform Windows
+
+Set Convultra windows to match platform expectations:
+- Google: Use 90-day window
+- Meta: Use 28-day window
+
+### 2. Use Enhanced Conversions
+
+When click IDs are missing, Enhanced Conversions provide backup attribution:
+
+```javascript
+Convultra.trackConversion('purchase', 
+  { orderId: 'ORD-123', value: 99.99 },
+  { email: 'user@example.com' } // Enables matching without click ID
+)
+```
+
+### 3. Track All Touchpoints
+
+Ensure SDK is on every page to capture full journey:
+- Landing pages ✅
+- Product pages ✅
+- Cart ✅
+- Checkout ✅
+- Thank you ✅
+
+---
+
+## Next Steps
+
+- [Cross-Domain Tracking →](/advanced/cross-domain)
+- [Conversion Recovery →](/advanced/conversion-recovery)
+

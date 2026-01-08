@@ -1,0 +1,151 @@
+import { Callout, Steps } from 'nextra/components'
+
+# TikTok Ads Integration
+
+Send conversions to TikTok via the Events API for server-side tracking.
+
+## Prerequisites
+
+- TikTok for Business account
+- TikTok Pixel created
+- Access to TikTok Events Manager
+
+---
+
+## Setup
+
+<Steps>
+### Connect Your Account
+
+1. Go to **Dashboard → Integrations**
+2. Click **Connect TikTok Ads**
+3. Sign in with your TikTok Business account
+4. Authorize Convultra access
+
+### Select Pixel
+
+Choose the TikTok Pixel that should receive events.
+
+### Configure Events
+
+Map Convultra events to TikTok standard events:
+
+| Convultra Event | TikTok Event |
+|-----------------|--------------|
+| `purchase` | `CompletePayment` |
+| `lead` | `SubmitForm` |
+| `signup` | `CompleteRegistration` |
+| `add_to_cart` | `AddToCart` |
+| `pageview` | `ViewContent` |
+
+### Test Integration
+
+Use TikTok's Events Manager to verify events are arriving.
+</Steps>
+
+---
+
+## TTCLID Attribution
+
+TikTok uses `ttclid` for click attribution:
+
+```
+User clicks ad → https://yoursite.com/?ttclid=xyz789...
+         ↓
+Convultra captures TTCLID → Stores for 90 days
+         ↓
+User converts → TTCLID included in event
+         ↓
+TikTok matches to original ad click
+```
+
+---
+
+## Event Structure
+
+```javascript
+// What Convultra sends to TikTok
+{
+  pixel_code: 'YOUR_PIXEL_CODE',
+  event: 'CompletePayment',
+  event_id: 'evt_1704067200000_abc123',
+  timestamp: '2024-01-15T14:30:45Z',
+  
+  context: {
+    user_agent: 'Mozilla/5.0...',
+    ip: '203.0.113.0'
+  },
+  
+  user: {
+    ttclid: 'xyz789...',
+    email: 'sha256_email_hash',
+    phone: 'sha256_phone_hash'
+  },
+  
+  properties: {
+    value: 99.99,
+    currency: 'USD',
+    contents: [
+      { content_id: 'PROD-001', content_type: 'product', quantity: 1 }
+    ]
+  }
+}
+```
+
+---
+
+## Enhanced Matching
+
+Include user data for better attribution:
+
+```javascript copy
+Convultra.trackConversion('purchase',
+  {
+    orderId: 'ORDER-12345',
+    value: 99.99,
+    currency: 'USD',
+    content_ids: ['PROD-001']
+  },
+  {
+    email: 'customer@example.com',
+    phone: '+1234567890'
+  }
+)
+```
+
+---
+
+## Monitoring
+
+### TikTok Events Manager
+
+1. Go to **Events Manager** in TikTok Ads Manager
+2. Select your Pixel
+3. View **Events Overview** for received events
+
+### Convultra Logs
+
+**Dashboard → Integrations → TikTok Ads → View Logs**
+
+---
+
+## Troubleshooting
+
+### Events Not Appearing
+
+1. Check pixel code is correct
+2. Verify access token is valid
+3. Check for API errors in Convultra logs
+
+### Low Match Rate
+
+1. Ensure TTCLID is being captured
+2. Add email/phone for enhanced matching
+
+---
+
+## Next Steps
+
+- [LinkedIn Ads Integration →](/integrations/linkedin-ads)
+- [Enhanced Conversions →](/sdk/enhanced-conversions)
+

@@ -1,0 +1,327 @@
+import { Callout, Tabs, Tab } from 'nextra/components'
+
+# SDK Configuration
+
+Configure the Convultra SDK to match your tracking needs.
+
+## Initialization
+
+<Tabs items={['CDN (Data Attributes)', 'JavaScript', 'TypeScript']}>
+  <Tab>
+```html copy
+<script
+  src="https://cdn.convultra.com/ultra.min.js"
+  data-convultra-key="proj_your_api_key"
+  data-auto-track="true"
+  data-debug="false"
+  data-analytics="true"
+  data-cross-domain="example.com,checkout.example.com"
+></script>
+```
+  </Tab>
+  <Tab>
+```javascript copy
+Convultra.init('proj_your_api_key', {
+  autoTrack: true,
+  debug: false,
+  analytics: true,
+  respectDNT: true,
+  crossDomainDomains: ['example.com', 'checkout.example.com']
+})
+```
+  </Tab>
+  <Tab>
+```typescript copy
+import Convultra from '@convultra/sdk-js'
+
+interface ConvultraConfig {
+  autoTrack?: boolean
+  debug?: boolean
+  analytics?: boolean
+  respectDNT?: boolean
+  endpoint?: string
+  crossDomainDomains?: string[]
+}
+
+Convultra.init('proj_your_api_key', {
+  autoTrack: true,
+  debug: false,
+  analytics: true,
+  respectDNT: true
+} as ConvultraConfig)
+```
+  </Tab>
+</Tabs>
+
+---
+
+## Configuration Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `autoTrack` | boolean | `true` | Automatically track page views, clicks, and form submissions |
+| `debug` | boolean | `false` | Enable console logging for debugging |
+| `analytics` | boolean | `true` | Enable analytics features (bounce rate, session duration) |
+| `respectDNT` | boolean | `true` | Respect browser's Do Not Track setting |
+| `endpoint` | string | Convultra API | Custom tracking endpoint URL |
+| `crossDomainDomains` | string[] | `[]` | Domains for cross-domain tracking |
+
+---
+
+## Auto-Tracking
+
+When `autoTrack: true`, the SDK automatically tracks:
+
+### Page Views
+Every page load and SPA navigation (Next.js, React Router, Vue Router supported).
+
+```javascript
+// Tracked automatically on page load
+{
+  event_type: 'pageview',
+  url: 'https://yoursite.com/pricing',
+  path: '/pricing',
+  title: 'Pricing - Your Site',
+  referrer: 'https://google.com'
+}
+```
+
+### Link Clicks
+All link clicks with destination URL.
+
+```javascript
+// Tracked automatically on link click
+{
+  event_type: 'click',
+  element: 'link',
+  href: 'https://example.com',
+  text: 'Learn More'
+}
+```
+
+### Button Clicks
+All button clicks with button text.
+
+```javascript
+// Tracked automatically on button click
+{
+  event_type: 'click',
+  element: 'button',
+  text: 'Submit',
+  type: 'submit'
+}
+```
+
+### Form Submissions
+All form submissions with form details.
+
+```javascript
+// Tracked automatically on form submit
+{
+  event_type: 'form_submit',
+  form_id: 'contact-form',
+  form_name: 'contact',
+  action: '/api/contact'
+}
+```
+
+---
+
+## Debug Mode
+
+Enable debug mode to see detailed console logging:
+
+```javascript
+Convultra.init('proj_your_api_key', {
+  debug: true
+})
+```
+
+Debug output:
+
+```
+[Convultra] 🚀 Convultra initialized - Ultra tracking active!
+[Convultra] 🆕 New session created: { sessionId: 'ses_123...', hasStoredSession: false }
+[Convultra] 📄 Pageview event: { sessionId: 'ses_123...', url: '...', pageViews: 1 }
+[Convultra] Event tracked: pageview { title: 'Home', path: '/' }
+[Convultra] Event sent individually: pageview evt_123...
+```
+
+<Callout type="warning">
+  Disable debug mode in production to avoid console noise and improve performance.
+</Callout>
+
+---
+
+## Analytics Mode
+
+When `analytics: true`, the SDK tracks additional analytics data:
+
+### Session Analytics
+- **Entry page** - First page in session
+- **Exit page** - Last page in session
+- **Session duration** - Total time on site
+- **Page views** - Number of pages viewed
+
+### Bounce Rate
+Uses Plausible-style bounce rate calculation:
+- **Bounced** = Single page view AND no interactive events
+- **Not bounced** = Multiple page views OR any interactive event
+
+### Scroll Depth
+Tracks how far users scroll on each page (0-100%).
+
+```javascript
+// Session data available via
+const session = Convultra.getSession()
+console.log(session.pageViews)        // 5
+console.log(session.engagementEvents) // 3
+console.log(session.maxScrollDepth)   // 75
+```
+
+---
+
+## Do Not Track
+
+When `respectDNT: true` (default), the SDK respects the browser's DNT setting:
+
+```javascript
+// If navigator.doNotTrack === '1', tracking is disabled
+Convultra.init('proj_your_api_key', {
+  respectDNT: true  // Default
+})
+```
+
+You can override this for essential tracking:
+
+```javascript
+Convultra.init('proj_your_api_key', {
+  respectDNT: false  // Track all users
+})
+```
+
+---
+
+## Custom Endpoint
+
+For self-hosted or enterprise deployments:
+
+```javascript
+Convultra.init('proj_your_api_key', {
+  endpoint: 'https://tracking.yourdomain.com/v1'
+})
+```
+
+---
+
+## Cross-Domain Tracking
+
+Track users across multiple domains (e.g., marketing site → checkout):
+
+<Tabs items={['Data Attribute', 'JavaScript']}>
+  <Tab>
+```html copy
+<script
+  src="https://cdn.convultra.com/ultra.min.js"
+  data-convultra-key="proj_your_api_key"
+  data-cross-domain="checkout.example.com,app.example.com"
+></script>
+```
+  </Tab>
+  <Tab>
+```javascript copy
+Convultra.init('proj_your_api_key', {
+  crossDomainDomains: ['checkout.example.com', 'app.example.com']
+})
+
+// Or enable after init
+Convultra.enableCrossDomainTracking(['checkout.example.com', 'app.example.com'])
+```
+  </Tab>
+</Tabs>
+
+The SDK automatically:
+1. Decorates links to specified domains with session data
+2. Reads session data when users arrive from those domains
+3. Maintains continuous session across domain boundaries
+
+Learn more in [Cross-Domain Tracking →](/advanced/cross-domain-tracking)
+
+---
+
+## Programmatic Configuration
+
+Access and modify configuration at runtime:
+
+```javascript
+// Check if initialized
+if (Convultra.initialized) {
+  console.log('SDK is ready')
+}
+
+// Access current config
+console.log(Convultra.config.apiKey)
+console.log(Convultra.config.autoTrack)
+
+// Get current session
+const session = Convultra.getSession()
+console.log(session.id, session.pageViews)
+
+// Reset tracking (for testing or opt-out)
+Convultra.reset()
+```
+
+---
+
+## TypeScript Support
+
+The SDK includes TypeScript definitions:
+
+```typescript
+import Convultra, { 
+  ConvultraConfig, 
+  EventData, 
+  SessionInfo 
+} from '@convultra/sdk-js'
+
+const config: ConvultraConfig = {
+  autoTrack: true,
+  debug: false
+}
+
+Convultra.init('proj_your_api_key', config)
+
+// Fully typed
+const session: SessionInfo | null = Convultra.getSession()
+```
+
+---
+
+## Command Queue
+
+Like `gtag.js`, Convultra supports a command queue for calls made before the SDK loads:
+
+```html
+<script>
+  // These calls are queued and executed after SDK loads
+  Convultra.track('button_click', { name: 'hero-cta' })
+  Convultra.trackPurchase({ orderId: '123', value: 99 })
+</script>
+
+<!-- SDK loads after the above calls -->
+<script
+  src="https://cdn.convultra.com/ultra.min.js"
+  data-convultra-key="proj_your_api_key"
+></script>
+```
+
+All queued commands are processed automatically when the SDK initializes.
+
+---
+
+## Next Steps
+
+- [Track custom events →](/sdk/tracking-events)
+- [Track conversions →](/sdk/tracking-conversions)
+- [Enhanced Conversions →](/sdk/enhanced-conversions)
+

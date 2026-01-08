@@ -1,0 +1,225 @@
+import { Callout, Tabs, Tab } from 'nextra/components'
+
+# Conversions
+
+Track, analyze, and manage your conversions in the Conversions dashboard.
+
+## Conversion Overview
+
+The Conversions page shows:
+
+| Metric | Description |
+|--------|-------------|
+| **Total Conversions** | All conversion events |
+| **Total Value** | Sum of conversion values |
+| **Avg. Value** | Average conversion value |
+| **Conversion Rate** | Conversions / Visitors |
+
+---
+
+## Conversion List
+
+View individual conversions with full details:
+
+| Column | Description |
+|--------|-------------|
+| Time | When conversion occurred |
+| Event | Event type (purchase, lead, etc.) |
+| Value | Conversion value |
+| Order ID | Your order/lead ID |
+| Source | Traffic source |
+| Platform Status | Forwarding status per platform |
+
+### Filtering
+
+Filter conversions by:
+- Event type
+- Date range
+- Value range
+- Source/medium
+- Platform status
+
+---
+
+## Conversion Types
+
+### Standard Events
+
+| Event | Typical Usage |
+|-------|---------------|
+| `purchase` | E-commerce transactions |
+| `lead` | Form submissions |
+| `signup` | Account registrations |
+| `subscription` | Recurring signups |
+| `download` | Content downloads |
+
+### Custom Events
+
+Any `track()` call can be a conversion:
+
+```javascript
+Convultra.track('demo_booked', {
+  value: 100,
+  demo_type: 'enterprise'
+})
+```
+
+---
+
+## Attribution
+
+### Attribution Sources
+
+Each conversion shows its attribution:
+
+| Source Type | Example | Identifier |
+|-------------|---------|------------|
+| Google Ads | gclid | Click ID |
+| Meta Ads | fbclid | Click ID |
+| Microsoft Ads | msclkid | Click ID |
+| TikTok Ads | ttclid | Click ID |
+| Organic | referrer | Referrer URL |
+| Direct | - | No referrer |
+| UTM | utm_* | UTM parameters |
+
+### Attribution Window
+
+Convultra attributes conversions within:
+
+| Platform | Window |
+|----------|--------|
+| Google Ads | 90 days |
+| Meta Ads | 28 days |
+| Microsoft Ads | 90 days |
+| TikTok | 28 days |
+| LinkedIn | 30 days |
+
+### Multi-Touch Attribution
+
+View the full customer journey:
+
+**Conversions → [Click conversion] → View Journey**
+
+Shows all touchpoints before conversion:
+1. First touch (entry)
+2. All page views
+3. All events
+4. Conversion
+
+---
+
+## Platform Forwarding
+
+### Forwarding Status
+
+Each conversion shows status per connected platform:
+
+| Status | Meaning |
+|--------|---------|
+| ✅ **Sent** | Successfully delivered |
+| ⏳ **Pending** | In queue |
+| 🔄 **Retrying** | Failed, retrying |
+| ❌ **Failed** | Permanent failure |
+| ⚪ **N/A** | Not applicable |
+
+### Why "N/A"?
+
+A conversion shows N/A for a platform when:
+- No click ID for that platform (user didn't come from that ad)
+- Platform not connected
+- Event type not mapped
+
+### Viewing Logs
+
+**Conversions → [Click conversion] → View Forwarding Logs**
+
+Detailed logs show:
+- Timestamp
+- Request sent
+- Response received
+- Error details (if any)
+
+---
+
+## Conversion Recovery
+
+Convultra identifies "recovered" conversions that would have been lost:
+
+### What Gets Recovered?
+
+| Scenario | Native Tracking | Convultra |
+|----------|-----------------|-----------|
+| Ad blocker | ❌ Lost | ✅ Captured |
+| ITP/Cookie limits | ❌ Lost | ✅ Captured |
+| Privacy browsers | ❌ Lost | ✅ Captured |
+| Cross-device | ❌ Lost | ✅ Captured (with Enhanced) |
+
+### Recovery Metrics
+
+**Conversions → Recovery**
+
+| Metric | Description |
+|--------|-------------|
+| Recovered Conversions | Conversions that had no native pixel fire |
+| Recovery Rate | % of total conversions that were recovered |
+| Recovered Value | Revenue from recovered conversions |
+
+<Callout>
+  On average, Convultra recovers 30-40% more conversions than client-side pixels alone.
+</Callout>
+
+---
+
+## Deduplication
+
+Convultra prevents double-counting:
+
+### Deduplication Methods
+
+| Method | How It Works |
+|--------|--------------|
+| Order ID | Same orderId within 24h = duplicate |
+| Event ID | Same eventId within 5min = duplicate |
+| Click ID | Same click ID + value within 1h = duplicate |
+| Fingerprint | Same fingerprint + value within 5min = duplicate |
+
+### Viewing Duplicates
+
+Duplicate events are logged but not counted:
+
+**Conversions → View Duplicates**
+
+---
+
+## Exports
+
+### Export Conversions
+
+1. Set filters
+2. Click **Export** → CSV or JSON
+3. Download file
+
+### Export Fields
+
+| Field | Description |
+|-------|-------------|
+| `event_id` | Unique event identifier |
+| `timestamp` | ISO timestamp |
+| `event_type` | Event name |
+| `value` | Conversion value |
+| `currency` | Currency code |
+| `order_id` | Your order/lead ID |
+| `source` | Traffic source |
+| `medium` | Traffic medium |
+| `gclid` | Google Click ID |
+| `fbclid` | Facebook Click ID |
+| `platform_status` | Forwarding status |
+
+---
+
+## Next Steps
+
+- [Test Center →](/dashboard/test-center)
+- [Deduplication →](/advanced/deduplication)
+- [Attribution Models →](/advanced/attribution-models)
+

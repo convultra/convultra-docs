@@ -1,0 +1,276 @@
+import { Callout } from 'nextra/components'
+
+# Conversion Recovery
+
+Convultra recovers conversions that would be lost to ad blockers, ITP, and privacy browsers.
+
+## The Attribution Gap
+
+Native ad platform pixels miss significant conversions:
+
+| Cause | Impact | Trend |
+|-------|--------|-------|
+| Ad blockers | 30-40% of users | Growing |
+| Safari ITP | 7-day cookie limit | Expanding |
+| iOS ATT | Opt-in only tracking | Permanent |
+| Privacy browsers | No 3rd party cookies | Growing |
+
+**Result:** Platforms report 60-70% of actual conversions.
+
+---
+
+## How Recovery Works
+
+```
+                     Traditional Pixel
+                           ↓
+User converts → Pixel fires → [AD BLOCKER] → ❌ Lost
+
+                     Convultra
+                           ↓
+User converts → SDK sends event → Server processes → ✅ Recovered
+                                         ↓
+                          Forward to ad platforms via API
+```
+
+### Why Server-Side Works
+
+| Client-Side Pixel | Server-Side (Convultra) |
+|-------------------|------------------------|
+| Browser sends to ad server | Your server sends to ad API |
+| Blocked by ad blockers | Nothing to block |
+| Limited by cookies | Uses click ID history |
+| JavaScript required | Works without JS (pixel fallback) |
+
+---
+
+## Recovery Metrics
+
+**Dashboard → Conversions → Recovery**
+
+| Metric | Description |
+|--------|-------------|
+| **Total Conversions** | All conversions tracked |
+| **Platform Reported** | Conversions native pixels saw |
+| **Recovered** | Conversions only Convultra captured |
+| **Recovery Rate** | Recovered / Total |
+
+### Example
+
+```
+Total Conversions: 1,000
+Platform Reported:   650 (65%)
+Recovered:           350 (35%)
+
+Recovery Rate: 35% more conversions captured!
+```
+
+---
+
+## Recovery by Platform
+
+Different platforms have different recovery rates:
+
+| Platform | Typical Recovery |
+|----------|-----------------|
+| Google Ads | 25-35% |
+| Meta Ads | 30-40% |
+| Microsoft Ads | 20-30% |
+| TikTok | 35-45% |
+
+<Callout>
+  Meta/Facebook typically has the highest recovery rate due to heavy ad blocker targeting of Facebook pixels.
+</Callout>
+
+---
+
+## Recovery Dashboard
+
+### By Platform View
+
+**Conversions → Recovery → By Platform**
+
+| Platform | Total | Reported | Recovered | Rate |
+|----------|-------|----------|-----------|------|
+| Google | 400 | 280 | 120 | 30% |
+| Meta | 350 | 210 | 140 | 40% |
+| Microsoft | 150 | 115 | 35 | 23% |
+
+### By Device
+
+| Device | Recovery Rate |
+|--------|---------------|
+| Desktop | 25% |
+| Mobile (iOS) | 45% |
+| Mobile (Android) | 30% |
+
+iOS has higher recovery due to ATT opt-outs.
+
+---
+
+## What's Recovered
+
+### Lost Due to Ad Blockers
+
+Users with ad blockers installed:
+- uBlock Origin
+- AdBlock Plus
+- Privacy Badger
+- Brave browser built-in
+
+### Lost Due to ITP/Cookie Limits
+
+Safari's Intelligent Tracking Prevention:
+- Limits 1st party cookies to 7 days
+- Blocks 3rd party cookies entirely
+- Partitions localStorage
+
+### Lost Due to Privacy Settings
+
+- Firefox Enhanced Tracking Protection
+- iOS App Tracking Transparency opt-outs
+- Global Privacy Control (GPC)
+- Private/Incognito mode
+
+### Lost Due to Technical Issues
+
+- JavaScript errors preventing pixel fire
+- Slow page loads (pixel didn't fire before navigation)
+- Race conditions
+
+---
+
+## Recovery Identification
+
+### How We Know It's Recovered
+
+A conversion is marked "recovered" when:
+
+1. Convultra tracked the conversion ✅
+2. No corresponding browser-side pixel fire detected ❌
+
+Detection methods:
+- Cross-reference with pixel fire events
+- Compare to platform-reported conversions
+- Analyze ad blocker indicators
+
+---
+
+## Maximizing Recovery
+
+### 1. Deploy on All Pages
+
+Ensure SDK is on every page, especially:
+- ✅ Landing pages
+- ✅ Product pages
+- ✅ Cart/checkout
+- ✅ Thank you/confirmation
+
+### 2. Use Enhanced Conversions
+
+When click IDs are blocked, Enhanced Conversions provide backup:
+
+```javascript
+Convultra.trackConversion('purchase',
+  { orderId: 'ORD-123', value: 99.99 },
+  { email: 'user@example.com' }  // Enables matching without click ID
+)
+```
+
+### 3. Capture Click IDs Early
+
+The SDK captures click IDs on first page load and stores them for 90 days.
+
+### 4. Use Server-Side Backup
+
+For maximum reliability, track server-side too:
+
+```javascript
+// Client-side
+Convultra.trackPurchase({ orderId: 'ORD-123', value: 99.99 })
+
+// Server-side (backup)
+await convultra.track({
+  event_type: 'purchase',
+  properties: { orderId: 'ORD-123', value: 99.99 }
+})
+```
+
+---
+
+## Impact on Platform Reporting
+
+### Before Convultra
+
+```
+Actual Conversions:  1,000
+Google Reports:        650 (35% missing)
+Meta Reports:          600 (40% missing)
+```
+
+### After Convultra
+
+```
+Actual Conversions:  1,000
+Google Reports:        950 (5% missing - Enhanced Conversions limitations)
+Meta Reports:          920 (8% missing)
+```
+
+### ROAS Improvement
+
+More conversions = better attributed ROAS:
+
+| Metric | Before | After |
+|--------|--------|-------|
+| Reported Revenue | $65,000 | $95,000 |
+| Ad Spend | $20,000 | $20,000 |
+| Reported ROAS | 3.25x | **4.75x** |
+
+---
+
+## Recovery Reports
+
+### Scheduled Reports
+
+Set up weekly/monthly recovery reports:
+
+**Dashboard → Settings → Reports**
+
+Report includes:
+- Total conversions recovered
+- Value recovered
+- Breakdown by platform
+- Trend comparison
+
+### Export Data
+
+Export recovery data for analysis:
+
+```javascript
+GET /v1/analytics/recovery?date_from=2024-01-01&format=csv
+```
+
+---
+
+## Troubleshooting
+
+### Low Recovery Rate
+
+1. **Check SDK deployment** - Is it on all pages?
+2. **Check Enhanced Conversions** - Are you sending user data?
+3. **Compare to platform** - Are platform numbers accurate?
+
+### Recovery Rate Too High
+
+If >50% are "recovered", verify:
+1. **Native pixels working** - Are they properly installed?
+2. **Pixel blocking** - Is something blocking pixels site-wide?
+
+---
+
+## Next Steps
+
+- [Deduplication →](/advanced/deduplication)
+- [Enhanced Conversions →](/sdk/enhanced-conversions)
+- [Platform Integrations →](/integrations/overview)
+

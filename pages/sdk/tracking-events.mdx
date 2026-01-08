@@ -1,0 +1,358 @@
+import { Callout, Tabs, Tab } from 'nextra/components'
+
+# Tracking Events
+
+Track user behavior and custom events to understand your customer journey.
+
+## Basic Event Tracking
+
+Use `Convultra.track()` for any custom event:
+
+```javascript copy
+Convultra.track('event_name', {
+  // Event properties
+  property1: 'value1',
+  property2: 'value2'
+})
+```
+
+### Examples
+
+```javascript copy
+// Button click
+Convultra.track('button_click', {
+  button: 'hero_cta',
+  page: 'homepage'
+})
+
+// Video play
+Convultra.track('video_play', {
+  video_id: 'intro-video',
+  title: 'Product Demo',
+  duration: 180
+})
+
+// Feature usage
+Convultra.track('feature_used', {
+  feature: 'export_report',
+  format: 'pdf'
+})
+
+// Error occurred
+Convultra.track('error', {
+  type: 'payment_failed',
+  code: 'insufficient_funds',
+  message: 'Card declined'
+})
+```
+
+---
+
+## Page View Tracking
+
+Page views are tracked automatically when `autoTrack: true`. For manual control:
+
+```javascript copy
+// Track page view with custom properties
+Convultra.page({
+  title: 'Product Page - Widget Pro',
+  category: 'product',
+  product_id: 'widget-pro'
+})
+
+// Track virtual page view (SPA)
+Convultra.page({
+  path: '/app/settings',
+  title: 'Settings'
+})
+```
+
+### SPA Navigation
+
+The SDK automatically tracks route changes in:
+- **Next.js** (App Router and Pages Router)
+- **React Router**
+- **Vue Router**
+- **Any History API-based routing**
+
+No additional configuration needed.
+
+---
+
+## Data Attribute Tracking
+
+Track events declaratively in HTML without JavaScript:
+
+```html copy
+<!-- Track any element click -->
+<button
+  data-convultra-track="cta_click"
+  data-convultra-cta-name="start_trial"
+  data-convultra-position="header"
+>
+  Start Free Trial
+</button>
+
+<!-- Track link clicks with context -->
+<a
+  href="/pricing"
+  data-convultra-track="navigation"
+  data-convultra-section="header"
+  data-convultra-destination="pricing"
+>
+  Pricing
+</a>
+
+<!-- Track form submissions -->
+<form
+  data-convultra-track="newsletter_signup"
+  data-convultra-form-name="footer_newsletter"
+  data-convultra-source="blog"
+>
+  <input type="email" name="email" required />
+  <button type="submit">Subscribe</button>
+</form>
+```
+
+### Data Attribute Reference
+
+| Attribute | Description | Example |
+|-----------|-------------|---------|
+| `data-convultra-track` | Event type to track | `"cta_click"` |
+| `data-convultra-auto` | Auto-track on page load | `"section_view"` |
+| `data-convultra-value` | Numeric value | `"99.99"` |
+| `data-convultra-*` | Any custom property | `data-convultra-category="shoes"` |
+
+### Auto-Track on Page Load
+
+Use `data-convultra-auto` for elements that should track when visible:
+
+```html copy
+<!-- Tracks when page loads (not on click) -->
+<div
+  data-convultra-auto="section_view"
+  data-convultra-section="pricing"
+>
+  Pricing Section
+</div>
+```
+
+---
+
+## Event Properties
+
+All events automatically include:
+
+```javascript
+{
+  // SDK-generated
+  event_id: 'evt_1704067200000_abc',
+  timestamp: '2024-01-01T12:00:00.000Z',
+  session_id: 'ses_1704067200000_xyz',
+  fingerprint: 'fp_8a7b3c2d1e',
+  
+  // Page context
+  url: 'https://yoursite.com/page',
+  referrer: 'https://google.com',
+  path: '/page',
+  
+  // Device info
+  user_agent: 'Mozilla/5.0...',
+  viewport: { width: 1440, height: 900 },
+  screen_resolution: { width: 1920, height: 1080 },
+  timezone_offset: -300,
+  language: 'en-US',
+  platform: 'MacIntel',
+  
+  // Attribution (if available)
+  gclid: 'Cj0KCQjw...',
+  fbclid: 'IwAR3x...',
+  utm_source: 'google',
+  utm_campaign: 'summer-sale',
+  
+  // Your custom properties
+  ...yourEventData
+}
+```
+
+---
+
+## User Identification
+
+Associate events with a known user:
+
+```javascript copy
+// Identify user
+Convultra.identify('user_12345', {
+  email: 'user@example.com',
+  plan: 'premium',
+  signup_date: '2024-01-15'
+})
+
+// All subsequent events are linked to this user
+Convultra.track('upgrade_plan', {
+  from: 'free',
+  to: 'premium'
+})
+```
+
+<Callout type="info">
+  User identification enables cross-device tracking and Enhanced Conversions. User data is hashed before transmission.
+</Callout>
+
+---
+
+## E-Commerce Events
+
+Standard e-commerce event tracking:
+
+```javascript copy
+// Product viewed
+Convultra.track('product_viewed', {
+  product_id: 'PROD-001',
+  name: 'Widget Pro',
+  price: 99.99,
+  currency: 'USD',
+  category: 'widgets'
+})
+
+// Add to cart
+Convultra.track('add_to_cart', {
+  product_id: 'PROD-001',
+  name: 'Widget Pro',
+  price: 99.99,
+  quantity: 2
+})
+
+// Begin checkout
+Convultra.track('begin_checkout', {
+  items: [
+    { product_id: 'PROD-001', name: 'Widget Pro', price: 99.99, quantity: 2 }
+  ],
+  value: 199.98,
+  currency: 'USD'
+})
+
+// Checkout step
+Convultra.track('checkout_step', {
+  step: 2,
+  step_name: 'payment_info'
+})
+
+// Purchase (use trackPurchase for conversions)
+Convultra.trackPurchase({
+  orderId: 'ORDER-123',
+  value: 199.98,
+  currency: 'USD',
+  items: [
+    { product_id: 'PROD-001', name: 'Widget Pro', price: 99.99, quantity: 2 }
+  ]
+})
+```
+
+---
+
+## SaaS Events
+
+Common SaaS event patterns:
+
+```javascript copy
+// User registered
+Convultra.trackSignup({
+  userId: 'user_123',
+  plan: 'trial',
+  method: 'google'
+})
+
+// Feature activated
+Convultra.track('feature_activated', {
+  feature: 'api_access',
+  plan: 'pro'
+})
+
+// Subscription started
+Convultra.trackSubscription({
+  subscriptionId: 'sub_123',
+  plan: 'pro',
+  billingCycle: 'monthly',
+  value: 29.99
+})
+
+// Upgrade
+Convultra.track('plan_upgraded', {
+  from_plan: 'starter',
+  to_plan: 'pro',
+  mrr_change: 20
+})
+
+// Churn
+Convultra.track('subscription_cancelled', {
+  subscriptionId: 'sub_123',
+  reason: 'too_expensive',
+  mrr_lost: 29.99
+})
+```
+
+---
+
+## Best Practices
+
+### 1. Use Consistent Naming
+
+```javascript
+// ✅ Good - snake_case, descriptive
+Convultra.track('button_click', { button_name: 'hero_cta' })
+Convultra.track('form_submit', { form_name: 'contact' })
+
+// ❌ Bad - inconsistent, vague
+Convultra.track('click', { name: 'button1' })
+Convultra.track('FormSubmit', { form: 'contact' })
+```
+
+### 2. Include Context
+
+```javascript
+// ✅ Good - includes location/context
+Convultra.track('cta_click', {
+  button: 'start_trial',
+  page: 'pricing',
+  position: 'above_fold',
+  variant: 'green'
+})
+
+// ❌ Bad - missing context
+Convultra.track('click', { button: 'trial' })
+```
+
+### 3. Track Meaningful Actions
+
+```javascript
+// ✅ Good - tracks user intent
+Convultra.track('search', { query: 'widget', results: 15 })
+Convultra.track('filter_applied', { filter: 'price', value: 'under_100' })
+
+// ❌ Bad - too granular
+Convultra.track('mouse_move', { x: 100, y: 200 })
+```
+
+---
+
+## Method Chaining
+
+All tracking methods return the Convultra instance for chaining:
+
+```javascript copy
+Convultra
+  .identify('user_123', { email: 'user@example.com' })
+  .track('login', { method: 'google' })
+  .page({ title: 'Dashboard' })
+```
+
+---
+
+## Next Steps
+
+- [Track conversions →](/sdk/tracking-conversions)
+- [Enhanced Conversions →](/sdk/enhanced-conversions)
+- [Session management →](/sdk/session-management)
+

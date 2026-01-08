@@ -1,0 +1,242 @@
+import { Callout } from 'nextra/components'
+
+# Bot Detection
+
+Convultra automatically detects and filters bot traffic for accurate analytics.
+
+## Why Filter Bots?
+
+Bot traffic can significantly skew your metrics:
+
+| Metric | With Bots | Without Bots |
+|--------|-----------|--------------|
+| Visitors | 100,000 | 60,000 |
+| Bounce Rate | 80% | 45% |
+| Avg. Duration | 5s | 2m 30s |
+
+Bots inflate visitor counts while showing poor engagement, leading to inaccurate insights.
+
+---
+
+## Detection Methods
+
+### User Agent Analysis
+
+Convultra identifies bots by their user agent strings:
+
+```
+// Known bot user agents
+Googlebot/2.1 (+http://www.google.com/bot.html)
+Mozilla/5.0 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)
+ChatGPT-User
+Anthropic-AI
+```
+
+### Behavior Patterns
+
+Additional signals:
+- No JavaScript execution
+- Rapid page requests
+- Unusual request patterns
+- Known bot IP ranges
+
+---
+
+## Bot Categories
+
+### Search Engine Bots
+
+| Bot | User Agent |
+|-----|------------|
+| Googlebot | `Googlebot/2.1` |
+| Bingbot | `bingbot/2.0` |
+| DuckDuckBot | `DuckDuckBot` |
+| Yandex | `YandexBot` |
+| Baidu | `Baiduspider` |
+
+### AI Crawlers
+
+| Bot | User Agent |
+|-----|------------|
+| ChatGPT | `ChatGPT-User` |
+| Claude | `Anthropic-AI` / `Claude-Web` |
+| Perplexity | `PerplexityBot` |
+| Google Bard | `Google-Extended` |
+| Bing Copilot | `BingPreview` |
+
+### Monitoring Bots
+
+| Bot | Purpose |
+|-----|---------|
+| Uptime Robot | Uptime monitoring |
+| Pingdom | Performance monitoring |
+| GTmetrix | Speed testing |
+
+### Social Media
+
+| Bot | Purpose |
+|-----|---------|
+| Facebot | Facebook link previews |
+| Twitterbot | Twitter card previews |
+| LinkedInBot | LinkedIn previews |
+
+---
+
+## Viewing Bot Analytics
+
+### Bot Dashboard
+
+**Dashboard → Analytics → Bots**
+
+Shows:
+- Total bot requests
+- Bot requests by category
+- Bot requests over time
+- Top bot user agents
+
+### AI Bot Breakdown
+
+**Dashboard → Analytics → AI Bots**
+
+Specific view for AI crawler traffic:
+
+| Metric | Description |
+|--------|-------------|
+| Total AI Requests | All AI crawler hits |
+| By Platform | ChatGPT, Claude, Perplexity, etc. |
+| Top Pages | Which pages AI is crawling |
+| Trend | AI crawling over time |
+
+<Callout>
+  AI crawler traffic is increasing rapidly. Understanding what AI crawls can inform your LLM-ready content strategy.
+</Callout>
+
+---
+
+## Filtering Options
+
+### Default Behavior
+
+By default, bot traffic is:
+- ✅ Tracked and logged
+- ✅ Categorized
+- ❌ Excluded from main analytics
+- ❌ Excluded from conversions
+
+### Include Bots
+
+Toggle "Include Bots" in the dashboard to see all traffic including bots.
+
+### Configuration
+
+```javascript
+Convultra.init({
+  apiKey: 'your-key',
+  filterBots: true,      // Default: true
+  trackBots: true        // Track bots separately (default: true)
+})
+```
+
+---
+
+## Bot vs Human Conversions
+
+<Callout type="warning">
+  Conversions from bot traffic are automatically excluded from forwarding to ad platforms.
+</Callout>
+
+Convultra ensures:
+- Bot "conversions" are logged but not counted
+- Ad platforms only receive human conversions
+- Your ROAS calculations remain accurate
+
+---
+
+## Custom Bot Rules
+
+For specific bots not in the default list:
+
+**Dashboard → Settings → Bot Detection → Custom Rules**
+
+```javascript
+// Add custom bot patterns
+{
+  "userAgentContains": ["MyInternalBot", "TestingTool"],
+  "ipRanges": ["192.168.1.0/24"]
+}
+```
+
+---
+
+## API for Bot Data
+
+Query bot analytics via API:
+
+```javascript
+// Get bot breakdown
+GET /v1/analytics/bots?date_from=2024-01-01
+
+// Response
+{
+  "total_bot_requests": 45000,
+  "by_category": {
+    "search_engine": 30000,
+    "ai_crawler": 10000,
+    "monitoring": 3000,
+    "other": 2000
+  },
+  "top_bots": [
+    { "name": "Googlebot", "requests": 20000 },
+    { "name": "ChatGPT-User", "requests": 8000 },
+    { "name": "bingbot", "requests": 7000 }
+  ]
+}
+```
+
+---
+
+## SEO Insights from Bot Data
+
+Use bot analytics for SEO insights:
+
+### Crawl Frequency
+
+Monitor how often search engines crawl:
+- Increasing = Good sign for SEO
+- Decreasing = May indicate issues
+
+### Crawled Pages
+
+See which pages are being crawled:
+- Important pages being crawled ✅
+- Important pages not crawled = add internal links
+
+### AI Crawler Trends
+
+Understand AI platform interest in your content:
+- High AI crawling = Content being included in AI responses
+- Specific pages = Topics AI finds relevant
+
+---
+
+## Troubleshooting
+
+### High Bot Traffic
+
+1. **Check for attacks** - Unusual spikes may indicate scraping
+2. **Review user agents** - Identify unknown bots
+3. **Check crawl budget** - May be wasting server resources
+
+### Legitimate Traffic Flagged as Bot
+
+1. **Check user agent** - Is it being misidentified?
+2. **Add to allowlist** - Exclude specific user agents
+3. **Contact support** - Report false positives
+
+---
+
+## Next Steps
+
+- [AI Referrals →](/advanced/ai-referrals)
+- [Analytics →](/dashboard/analytics)
+

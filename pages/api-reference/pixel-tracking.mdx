@@ -1,0 +1,319 @@
+import { Callout, Tabs, Tab } from 'nextra/components'
+
+# Pixel Tracking (No-JS)
+
+Track events without JavaScript using image pixels.
+
+## Overview
+
+The tracking pixel provides a fallback for environments where JavaScript is blocked or disabled:
+- Email clients
+- AMP pages
+- High-security environments
+- JavaScript-disabled browsers
+
+---
+
+## How It Works
+
+```
+1. Browser requests 1x1 transparent GIF
+         ↓
+2. URL contains event parameters
+         ↓
+3. Server parses parameters, logs event
+         ↓
+4. Returns transparent pixel image
+```
+
+---
+
+## Basic Usage
+
+### Pixel URL
+
+```
+https://your-endpoint.com/v1/pixel.gif?event_type=purchase&value=99.99&order_id=ORD-123
+```
+
+### HTML Implementation
+
+```html
+<img 
+  src="https://your-endpoint.com/v1/pixel.gif?event_type=purchase&value=99.99&order_id=ORD-123"
+  width="1"
+  height="1"
+  style="display:none"
+  alt=""
+/>
+```
+
+---
+
+## Parameters
+
+### Required
+
+| Parameter | Description |
+|-----------|-------------|
+| `project_id` | Your project ID |
+| `event_type` | Event name |
+
+### Optional
+
+| Parameter | Description |
+|-----------|-------------|
+| `value` | Conversion value |
+| `currency` | Currency code |
+| `order_id` | Order/transaction ID |
+| `user_id` | Your user identifier |
+| `session_id` | Session ID |
+
+### Attribution
+
+| Parameter | Description |
+|-----------|-------------|
+| `gclid` | Google Click ID |
+| `fbclid` | Facebook Click ID |
+| `msclkid` | Microsoft Click ID |
+| `utm_source` | UTM source |
+| `utm_medium` | UTM medium |
+| `utm_campaign` | UTM campaign |
+
+### Enhanced Conversions
+
+| Parameter | Description |
+|-----------|-------------|
+| `email` | Hashed email (SHA256) |
+| `phone` | Hashed phone (SHA256) |
+| `fn` | Hashed first name (SHA256) |
+| `ln` | Hashed last name (SHA256) |
+
+<Callout type="warning">
+  For Enhanced Conversions via pixel, you must hash values yourself using SHA256.
+</Callout>
+
+---
+
+## Use Cases
+
+### Email Tracking
+
+Track email opens and clicks:
+
+```html
+<!-- In email template -->
+<img 
+  src="https://your-endpoint.com/v1/pixel.gif?event_type=email_open&campaign_id=summer_2024"
+  width="1"
+  height="1"
+  alt=""
+/>
+```
+
+### Thank You Page (No-JS)
+
+```html
+<noscript>
+  <img 
+    src="https://your-endpoint.com/v1/pixel.gif?event_type=purchase&order_id=ORD-123&value=99.99"
+    width="1"
+    height="1"
+    alt=""
+  />
+</noscript>
+```
+
+### AMP Pages
+
+```html
+<amp-pixel 
+  src="https://your-endpoint.com/v1/pixel.gif?event_type=pageview&page=amp_article"
+  layout="nodisplay"
+></amp-pixel>
+```
+
+### Server-Side Rendering
+
+```php
+<!-- PHP example -->
+<img 
+  src="https://your-endpoint.com/v1/pixel.gif?event_type=purchase&order_id=<?= htmlspecialchars($orderId) ?>&value=<?= $orderTotal ?>"
+  width="1"
+  height="1"
+  alt=""
+/>
+```
+
+---
+
+## Dynamic Pixel Generation
+
+### JavaScript Helper
+
+```javascript
+function getConversionPixel(data) {
+  const params = new URLSearchParams({
+    project_id: 'YOUR_PROJECT_ID',
+    event_type: 'purchase',
+    order_id: data.orderId,
+    value: data.value,
+    currency: data.currency
+  })
+  
+  return `https://your-endpoint.com/v1/pixel.gif?${params}`
+}
+
+// Insert dynamically
+const img = document.createElement('img')
+img.src = getConversionPixel({ orderId: 'ORD-123', value: 99.99 })
+img.width = 1
+img.height = 1
+document.body.appendChild(img)
+```
+
+### Server-Side Generation
+
+<Tabs items={['Node.js', 'Python', 'PHP']}>
+  <Tab>
+```javascript
+function generatePixelUrl(order) {
+  const params = new URLSearchParams({
+    project_id: process.env.CONVULTRA_PROJECT_ID,
+    event_type: 'purchase',
+    order_id: order.id,
+    value: order.total.toString(),
+    currency: 'USD'
+  })
+  
+  // Add hashed email for Enhanced Conversions
+  if (order.customer.email) {
+    const hashedEmail = crypto
+      .createHash('sha256')
+      .update(order.customer.email.toLowerCase().trim())
+      .digest('hex')
+    params.set('email', hashedEmail)
+  }
+  
+  return `https://your-endpoint.com/v1/pixel.gif?${params}`
+}
+```
+  </Tab>
+  <Tab>
+```python
+import hashlib
+from urllib.parse import urlencode
+
+def generate_pixel_url(order):
+    params = {
+        'project_id': os.environ['CONVULTRA_PROJECT_ID'],
+        'event_type': 'purchase',
+        'order_id': order['id'],
+        'value': str(order['total']),
+        'currency': 'USD'
+    }
+    
+    # Add hashed email
+    if order.get('customer', {}).get('email'):
+        email = order['customer']['email'].lower().strip()
+        hashed = hashlib.sha256(email.encode()).hexdigest()
+        params['email'] = hashed
+    
+    return f"https://your-endpoint.com/v1/pixel.gif?{urlencode(params)}"
+```
+  </Tab>
+  <Tab>
+```php
+function generatePixelUrl($order) {
+    $params = [
+        'project_id' => getenv('CONVULTRA_PROJECT_ID'),
+        'event_type' => 'purchase',
+        'order_id' => $order['id'],
+        'value' => $order['total'],
+        'currency' => 'USD'
+    ];
+    
+    // Add hashed email
+    if (!empty($order['customer']['email'])) {
+        $email = strtolower(trim($order['customer']['email']));
+        $params['email'] = hash('sha256', $email);
+    }
+    
+    return 'https://your-endpoint.com/v1/pixel.gif?' . http_build_query($params);
+}
+```
+  </Tab>
+</Tabs>
+
+---
+
+## Response
+
+The pixel endpoint returns:
+- **Content-Type**: `image/gif`
+- **Body**: 1x1 transparent GIF (43 bytes)
+- **Cache-Control**: `no-cache, no-store`
+
+---
+
+## Limitations
+
+| Feature | JS SDK | Pixel |
+|---------|--------|-------|
+| Auto page tracking | ✅ | ❌ |
+| Click ID capture | ✅ | ❌ Manual |
+| Session continuity | ✅ | ❌ |
+| Cross-domain | ✅ | ❌ |
+| Real-time | ✅ | ✅ |
+| Ad blocker bypass | ✅ | ✅ |
+
+---
+
+## Best Practices
+
+### 1. Always Include Project ID
+
+```html
+<img src="...?project_id=YOUR_PROJECT_ID&event_type=..." />
+```
+
+### 2. Hash Sensitive Data
+
+Never send PII in plain text:
+
+```javascript
+// Wrong
+?email=user@example.com
+
+// Correct
+?email=sha256_hash_here
+```
+
+### 3. Use HTTPS
+
+Always use HTTPS URLs for security.
+
+### 4. Hide the Pixel
+
+```html
+<img ... width="1" height="1" style="display:none" alt="" />
+```
+
+### 5. Include Fallback
+
+Use alongside JS SDK:
+
+```html
+<script src="https://cdn.convultra.com/ultra.min.js"></script>
+<noscript>
+  <img src="https://your-endpoint.com/v1/pixel.gif?..." />
+</noscript>
+```
+
+---
+
+## Next Steps
+
+- [SDK Methods →](/api-reference/sdk-methods)
+- [Server API →](/api-reference/server-api)
+

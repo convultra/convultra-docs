@@ -1,0 +1,249 @@
+import { Callout, Tabs, Tab, Steps } from 'nextra/components'
+
+# Installation
+
+Add Convultra to your website using one of these methods. All methods provide the same functionality - choose based on your tech stack.
+
+## Method 1: CDN Script (Recommended)
+
+The fastest way to get started. Add this single line to your website's `<head>`:
+
+```html copy filename="index.html"
+<script
+  src="https://cdn.convultra.com/ultra.min.js"
+  data-convultra-key="proj_your_api_key"
+></script>
+```
+
+<Callout type="info">
+  Replace `proj_your_api_key` with your actual project API key from the [Convultra dashboard](https://app.convultra.com).
+</Callout>
+
+### With Configuration Options
+
+```html copy filename="index.html"
+<script
+  src="https://cdn.convultra.com/ultra.min.js"
+  data-convultra-key="proj_your_api_key"
+  data-auto-track="true"
+  data-debug="false"
+  data-analytics="true"
+></script>
+```
+
+### CDN Options
+
+| Attribute | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `data-convultra-key` | string | **required** | Your project API key |
+| `data-auto-track` | boolean | `true` | Auto-track page views & clicks |
+| `data-debug` | boolean | `false` | Enable console logging |
+| `data-analytics` | boolean | `true` | Enable analytics features |
+| `data-cross-domain` | string | - | Comma-separated domains for cross-domain tracking |
+
+---
+
+## Method 2: NPM Package
+
+For React, Next.js, Vue, and other JavaScript frameworks:
+
+```bash copy
+npm install @convultra/sdk-js
+```
+
+Then initialize in your app:
+
+<Tabs items={['React', 'Next.js', 'Vue', 'Vanilla JS']}>
+  <Tab>
+```jsx copy filename="src/App.jsx"
+import { useEffect } from 'react'
+import Convultra from '@convultra/sdk-js'
+
+function App() {
+  useEffect(() => {
+    Convultra.init('proj_your_api_key', {
+      autoTrack: true,
+      analytics: true
+    })
+  }, [])
+
+  return <YourApp />
+}
+```
+  </Tab>
+  <Tab>
+```jsx copy filename="pages/_app.js"
+import { useEffect } from 'react'
+import Convultra from '@convultra/sdk-js'
+
+function MyApp({ Component, pageProps }) {
+  useEffect(() => {
+    Convultra.init('proj_your_api_key', {
+      autoTrack: true,
+      analytics: true
+    })
+  }, [])
+
+  return <Component {...pageProps} />
+}
+
+export default MyApp
+```
+  </Tab>
+  <Tab>
+```vue copy filename="src/main.js"
+import { createApp } from 'vue'
+import Convultra from '@convultra/sdk-js'
+import App from './App.vue'
+
+Convultra.init('proj_your_api_key', {
+  autoTrack: true,
+  analytics: true
+})
+
+createApp(App).mount('#app')
+```
+  </Tab>
+  <Tab>
+```js copy filename="main.js"
+import Convultra from '@convultra/sdk-js'
+
+Convultra.init('proj_your_api_key', {
+  autoTrack: true,
+  analytics: true
+})
+```
+  </Tab>
+</Tabs>
+
+---
+
+## Method 3: Self-Hosted
+
+Download and host the SDK on your own servers:
+
+<Steps>
+### Download the SDK
+
+```bash copy
+curl -o ultra.min.js https://cdn.convultra.com/ultra.min.js
+```
+
+### Add to your project
+
+Place `ultra.min.js` in your `/js` or `/assets` folder.
+
+### Include in your HTML
+
+```html copy filename="index.html"
+<script src="/js/ultra.min.js"></script>
+<script>
+  Convultra.init('proj_your_api_key')
+</script>
+```
+</Steps>
+
+<Callout type="warning">
+  Self-hosting means you won't receive automatic SDK updates. We recommend using the CDN for the latest features and bug fixes.
+</Callout>
+
+---
+
+## Method 4: Google Tag Manager
+
+Add Convultra through GTM without code changes:
+
+<Steps>
+### Create a Custom HTML Tag
+
+In GTM, create a new **Custom HTML** tag.
+
+### Add the SDK script
+
+```html copy
+<script>
+(function() {
+  var s = document.createElement('script');
+  s.src = 'https://cdn.convultra.com/ultra.min.js';
+  s.setAttribute('data-convultra-key', 'proj_your_api_key');
+  document.head.appendChild(s);
+})();
+</script>
+```
+
+### Set trigger to "All Pages"
+
+Configure the tag to fire on all pages.
+
+### Publish container
+
+Publish your GTM container to activate tracking.
+</Steps>
+
+---
+
+## Verify Installation
+
+After installation, verify Convultra is working:
+
+### 1. Check Console
+
+Open browser DevTools (F12) and look for:
+
+```
+🚀 Convultra initialized - Ultra tracking active!
+```
+
+### 2. Enable Debug Mode
+
+Add `?debug=true` to your URL or set `data-debug="true"`:
+
+```html
+<script
+  src="https://cdn.convultra.com/ultra.min.js"
+  data-convultra-key="proj_your_api_key"
+  data-debug="true"
+></script>
+```
+
+Debug mode shows detailed logging:
+
+```
+[Convultra] 🚀 Convultra initialized - Ultra tracking active!
+[Convultra] 📄 Pageview event: { sessionId: 'ses_123...', url: '...', pageViews: 1 }
+[Convultra] Event tracked: pageview { title: 'Home', path: '/' }
+```
+
+### 3. Check Network Tab
+
+In DevTools → Network, look for requests to:
+- `api.convultra.com/v1/track` (or your custom endpoint)
+
+### 4. View in Dashboard
+
+Go to your [Convultra Dashboard](https://app.convultra.com) → Traffic Analytics to see events arriving.
+
+---
+
+## Troubleshooting Installation
+
+<Callout type="error" emoji="⚠️">
+  **Events not appearing?**
+</Callout>
+
+1. **Check API Key** - Ensure it starts with `proj_` and matches your dashboard
+2. **Check Console** - Look for JavaScript errors
+3. **Check Network** - Verify tracking requests are successful (200 status)
+4. **Disable Ad Blocker** - Some blockers may interfere during testing
+5. **Clear Cache** - Hard refresh with Ctrl+Shift+R (Windows) or Cmd+Shift+R (Mac)
+
+---
+
+## Next Steps
+
+After installation:
+
+- [Track your first conversion →](/getting-started/quick-start)
+- [Configure SDK options →](/sdk/configuration)
+- [Set up ad platform integrations →](/integrations/overview)
+

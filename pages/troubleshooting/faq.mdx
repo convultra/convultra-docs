@@ -1,0 +1,265 @@
+import { Callout } from 'nextra/components'
+
+# Frequently Asked Questions
+
+## General
+
+### What is Convultra?
+
+Convultra is a conversion tracking platform that captures and forwards conversions to ad platforms with 95-98 percent accuracy, compared to 60-70 percent for client-side pixels.
+
+### How is Convultra different from Google Tag Manager?
+
+| Feature | GTM | Convultra |
+|---------|-----|-----------|
+| Client-side | ✅ | ✅ (SDK) |
+| Server-side | ✅ (complex setup) | ✅ (built-in) |
+| Ad blocker bypass | ❌ | ✅ |
+| ITP/cookie handling | ❌ | ✅ |
+| Deduplication | Manual | Automatic |
+| Platform forwarding | Manual | Automatic |
+
+### Does Convultra work with ad blockers?
+
+Yes. Convultra's server-side approach bypasses most ad blockers because:
+- Requests go to your endpoint, not ad servers
+- No third-party scripts to block
+- Server-to-server forwarding
+
+---
+
+## Installation
+
+### Can I use Convultra with my existing pixels?
+
+Yes. Convultra works alongside existing pixels:
+- Keep your gtag.js, Facebook Pixel, etc.
+- Convultra provides redundant server-side tracking
+- Deduplication prevents double-counting
+
+### Does the SDK slow down my site?
+
+The SDK is:
+- ~15KB gzipped
+- Loaded asynchronously
+- Non-blocking
+- Minimal CPU usage
+
+Impact on Core Web Vitals is negligible.
+
+### What frameworks are supported?
+
+Convultra works with any JavaScript framework:
+- React, Vue, Angular, Svelte
+- Next.js, Nuxt, SvelteKit
+- Vanilla JavaScript
+- Any HTML page
+
+---
+
+## Privacy & Compliance
+
+### Is Convultra GDPR compliant?
+
+Yes. Convultra:
+- Does not require cookies for basic analytics
+- Supports consent management
+- Provides data deletion APIs
+- Operates under strict data processing agreements
+
+### Do I need a cookie consent banner?
+
+For **analytics only**: No. Convultra's analytics are cookie-free and privacy-respecting.
+
+For **conversion tracking with Enhanced Conversions**: Consult your legal team, as you're processing PII (even if hashed).
+
+### Does Convultra store PII?
+
+Convultra:
+- Hashes all user data (email, phone, etc.) immediately
+- Never stores raw PII
+- Stores only hashed identifiers for matching
+- Provides data retention controls
+
+### Does Convultra track users across sites?
+
+No. Each project is isolated. Cross-domain tracking only works between domains you explicitly configure for the same project.
+
+---
+
+## Platform Integrations
+
+### Which ad platforms are supported?
+
+Currently supported:
+- Google Ads
+- Meta (Facebook/Instagram)
+- Microsoft Ads
+- TikTok
+- LinkedIn
+- Twitter/X
+
+More coming soon.
+
+### Do I need separate Convultra accounts per platform?
+
+No. One Convultra project can forward to all platforms simultaneously.
+
+### How long does platform authorization last?
+
+OAuth tokens typically last:
+- Google: 6 months (auto-refresh)
+- Meta: 60 days
+- Microsoft: 90 days
+
+Convultra auto-refreshes when possible.
+
+---
+
+## Data & Analytics
+
+### How real-time is the data?
+
+| Data Type | Delay |
+|-----------|-------|
+| Events | 2-5 seconds |
+| Aggregations | ~30 seconds |
+| Platform forwarding | under 5 minutes |
+
+### How long is data retained?
+
+Default retention:
+- Events: 2 years
+- Sessions: 90 days
+- Click IDs: 90 days
+
+Configurable per project.
+
+### Can I export my data?
+
+Yes:
+- Dashboard: CSV export
+- API: JSON/CSV endpoints
+- Webhooks: Real-time export
+
+---
+
+## Technical
+
+### What happens if Convultra is down?
+
+The SDK queues events locally and retries when the endpoint is available. No data is lost during brief outages.
+
+### Can I self-host Convultra?
+
+The SDK can point to any endpoint. For full self-hosting of the backend, contact us for enterprise licensing.
+
+### What's the API rate limit?
+
+- SDK: No limit (batched automatically)
+- Server API: 1000 requests/minute per project
+- Webhooks: Outbound only, no limit
+
+### Does Convultra work on mobile apps?
+
+The JavaScript SDK is for web. For mobile:
+- Use the Server API directly
+- Or integrate with your analytics SDK
+
+---
+
+## Billing
+
+### How are events counted?
+
+Events counted toward your plan:
+- Page views
+- Custom events
+- Conversions
+
+Not counted:
+- API queries
+- Dashboard views
+- Bot traffic (filtered)
+
+### What happens if I exceed my limit?
+
+- You'll receive warnings at 80% and 100%
+- Tracking continues for 48 hours
+- After 48 hours, new events are dropped
+- Historical data is never deleted
+
+### Can I upgrade/downgrade anytime?
+
+Yes. Plan changes take effect immediately:
+- Upgrades: Prorated for remaining period
+- Downgrades: Effective next billing cycle
+
+---
+
+## Common Scenarios
+
+### Can I track logged-in users across devices?
+
+Yes, with `identify()`:
+
+```javascript
+Convultra.identify('user_12345', {
+  email: 'user@example.com'
+})
+```
+
+### Can I track without JavaScript?
+
+Yes, use the [pixel endpoint](/api-reference/pixel-tracking):
+
+```html
+<img src="https://your-endpoint.com/v1/pixel.gif?event_type=purchase&..." />
+```
+
+### Can I track server-side only?
+
+Yes, use the [Server API](/api-reference/server-api):
+
+```javascript
+await fetch('https://your-endpoint.com/v1/track', {
+  method: 'POST',
+  headers: { 'Authorization': 'Bearer YOUR_SERVER_KEY' },
+  body: JSON.stringify({ event_type: 'purchase', ... })
+})
+```
+
+---
+
+## Troubleshooting
+
+### Why are my conversions not showing in Google Ads?
+
+1. Check click ID (gclid) was captured
+2. Check integration is connected
+3. Check conversion action mapping
+4. Check forwarding logs for errors
+5. Wait up to 6 hours (Google delay)
+
+See [Common Issues](/troubleshooting/common-issues)
+
+### Why is my match rate low?
+
+1. Add Enhanced Conversions user data
+2. Verify click IDs are being captured
+3. Check data formatting
+4. See [Enhanced Conversions](/sdk/enhanced-conversions)
+
+### Why do I see duplicate events?
+
+1. Check for page reloads on thank you page
+2. Check SDK isn't included twice
+3. Check orderId is unique
+4. See [Deduplication](/advanced/deduplication)
+
+---
+
+## More Questions?
+
+Contact support or check the [Debugging Guide](/troubleshooting/debugging).
+

@@ -1,0 +1,39 @@
+{
+  "index": {
+    "title": "Home",
+    "type": "page",
+    "display": "hidden",
+    "theme": {
+      "layout": "raw"
+    }
+  },
+  "getting-started": {
+    "title": "Getting Started",
+    "type": "page"
+  },
+  "sdk": {
+    "title": "JavaScript SDK",
+    "type": "page"
+  },
+  "integrations": {
+    "title": "Integrations",
+    "type": "page"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "type": "page"
+  },
+  "api-reference": {
+    "title": "API Reference",
+    "type": "page"
+  },
+  "advanced": {
+    "title": "Advanced",
+    "type": "page"
+  },
+  "troubleshooting": {
+    "title": "Troubleshooting",
+    "type": "page"
+  }
+}
+

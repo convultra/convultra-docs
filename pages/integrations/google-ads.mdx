@@ -1,0 +1,313 @@
+import { Callout, Steps, Tabs, Tab } from 'nextra/components'
+
+# Google Ads Integration
+
+Send conversions to Google Ads via the Offline Conversions API with Enhanced Conversions support.
+
+## Prerequisites
+
+- Active Google Ads account
+- Admin access to the account
+- At least one conversion action configured
+
+---
+
+## Setup
+
+<Steps>
+### Connect Your Account
+
+1. Go to **Dashboard → Integrations**
+2. Click **Connect Google Ads**
+3. Sign in with your Google account
+4. Grant Convultra access to your Google Ads accounts
+
+### Select Accounts
+
+Choose which Google Ads accounts should receive conversions. You can select multiple accounts if needed.
+
+### Create or Select Conversion Actions
+
+For each Convultra event type, map to a Google Ads conversion action:
+
+| Convultra Event | Recommended Google Ads Action |
+|-----------------|------------------------------|
+| `purchase` | "Convultra Purchase" (create new) |
+| `lead` | "Convultra Lead" (create new) |
+| `signup` | "Convultra Signup" (create new) |
+
+<Callout>
+  We recommend creating new "Convultra" conversion actions rather than using existing ones to avoid double-counting.
+</Callout>
+
+### Enable Enhanced Conversions
+
+Toggle on "Enhanced Conversions" to send hashed user data for better matching.
+
+### Test the Integration
+
+Use the Test Center (**Dashboard → Test**) to send a test conversion and verify it appears in Google Ads.
+</Steps>
+
+---
+
+## Conversion Actions Setup
+
+If you need to create conversion actions in Google Ads:
+
+<Steps>
+### Go to Conversions
+
+Google Ads → Goals → Conversions → Summary
+
+### Create New Action
+
+Click the **+** button → **+ New conversion action**
+
+### Select Import
+
+Choose **Import** → **Other data sources or CRMs**
+
+### Configure
+
+- **Goal category**: Choose appropriate (e.g., Purchase, Lead)
+- **Conversion name**: "Convultra Purchase"
+- **Value**: Use the conversion's value
+- **Count**: Every conversion
+
+### Note the Conversion Action ID
+
+You'll need this when mapping in Convultra.
+</Steps>
+
+---
+
+## How Data is Sent
+
+Convultra sends conversions via the Google Ads API:
+
+```javascript
+// What Convultra sends
+{
+  conversionAction: 'customers/123456/conversionActions/789',
+  gclid: 'Cj0KCQjw84anBhCtARIsAISI...',
+  conversionDateTime: '2024-01-15 14:30:45-05:00',
+  conversionValue: 99.99,
+  currencyCode: 'USD',
+  orderId: 'ORDER-12345',
+  
+  // Enhanced Conversions (when available)
+  userIdentifiers: [
+    { hashedEmail: 'sha256_e3b0c44298fc1c14...' },
+    { hashedPhoneNumber: 'sha256_a7b9c3d4e5f6...' },
+    { addressInfo: {
+        hashedFirstName: 'sha256_...',
+        hashedLastName: 'sha256_...',
+        city: 'New York',
+        state: 'NY',
+        countryCode: 'US',
+        postalCode: '10001'
+      }
+    }
+  ]
+}
+```
+
+---
+
+## Enhanced Conversions
+
+Enhanced Conversions significantly improve match rates:
+
+| Data Provided | Match Rate |
+|---------------|------------|
+| GCLID only | 50-70% |
+| + Email | 75-85% |
+| + Email + Phone | 85-92% |
+| + Email + Phone + Name | 90-95% |
+
+### Enable in SDK
+
+```javascript copy
+// Include user data when tracking conversions
+Convultra.trackConversion('purchase',
+  {
+    orderId: 'ORDER-12345',
+    value: 99.99,
+    currency: 'USD'
+  },
+  {
+    email: 'customer@example.com',
+    phone: '+1234567890',
+    firstName: 'John',
+    lastName: 'Doe'
+  }
+)
+```
+
+### Enable in Google Ads
+
+1. Go to **Conversions** → **Settings**
+2. Click on your conversion action
+3. Enable **Enhanced conversions for web**
+4. Accept the terms
+
+---
+
+## Attribution
+
+### Attribution Window
+
+Google Ads supports up to 90-day attribution windows. Convultra stores click IDs for 90 days to match.
+
+### GCLID Handling
+
+The GCLID is the primary attribution identifier:
+
+```
+User clicks ad → https://yoursite.com/?gclid=Cj0KCQjw...
+         ↓
+Convultra captures GCLID → Stores for 90 days
+         ↓
+User converts (days later) → GCLID included in conversion
+         ↓
+Google matches to original ad click
+```
+
+### No GCLID Available
+
+If GCLID is missing (privacy browser, cookie issues), Enhanced Conversions uses hashed user data to match:
+
+```
+No GCLID → Hash user email → Match to Google account
+```
+
+---
+
+## Monitoring
+
+### Check Conversion Status
+
+**Dashboard → Integrations → Google Ads → View Logs**
+
+Status indicators:
+- ✅ **Delivered** - Google accepted the conversion
+- ⏳ **Pending** - In processing queue
+- ❌ **Failed** - Error (click to see details)
+- 🔄 **Retrying** - Automatic retry in progress
+
+### Verify in Google Ads
+
+1. Go to **Conversions** → **Summary**
+2. Select your conversion action
+3. Check "Source" column for "Upload"
+
+<Callout type="info">
+  Conversions may take up to 3-6 hours to appear in Google Ads reporting, even though they're sent in real-time.
+</Callout>
+
+---
+
+## Troubleshooting
+
+### "No GCLID found"
+
+**Cause**: Conversion occurred without a captured GCLID.
+
+**Solutions**:
+1. Verify `?gclid=` is in landing page URLs
+2. Check auto-tagging is enabled in Google Ads
+3. Ensure SDK is on all landing pages
+
+### "Conversion action not found"
+
+**Cause**: Conversion action ID mismatch or deleted action.
+
+**Solutions**:
+1. Re-map conversion actions in Convultra
+2. Verify action exists in Google Ads
+
+### "Authentication failed"
+
+**Cause**: OAuth token expired or revoked.
+
+**Solutions**:
+1. Go to Integrations → Disconnect → Reconnect
+2. Ensure account has admin access
+
+### Low Match Rate
+
+**Cause**: Missing Enhanced Conversions data.
+
+**Solutions**:
+1. Enable Enhanced Conversions
+2. Add user data to conversion calls
+3. Check Enhanced Conversions Diagnostics in Google Ads
+
+---
+
+## Advanced Configuration
+
+### Multiple Accounts
+
+You can connect multiple Google Ads accounts and route conversions based on:
+- Project ID
+- Domain
+- Conversion type
+
+### MCC (Manager) Accounts
+
+Connect at the MCC level to access all sub-accounts:
+
+1. Connect using MCC credentials
+2. Select individual accounts to enable
+3. Map conversion actions per account
+
+### Conversion Imports
+
+Convultra uses "Upload" source type. These conversions:
+- Appear in the "All conversions" column
+- Are included in automated bidding
+- Have the same attribution as online conversions
+
+---
+
+## Best Practices
+
+### 1. Create Dedicated Conversion Actions
+
+```
+Existing: "Website Purchase" (from gtag.js)
+New: "Convultra Purchase" (from Convultra)
+
+Don't mix sources to avoid double-counting.
+```
+
+### 2. Include Order IDs
+
+```javascript
+// Always include orderId for deduplication
+Convultra.trackPurchase({
+  orderId: 'ORDER-12345', // Required!
+  value: 99.99
+})
+```
+
+### 3. Use Real-Time Forwarding
+
+Convultra sends conversions immediately. Don't batch or delay conversion tracking.
+
+### 4. Monitor Match Rates
+
+Check Enhanced Conversions Diagnostics weekly:
+
+**Google Ads → Conversions → [Action] → Diagnostics**
+
+---
+
+## Next Steps
+
+- [Meta Ads Integration →](/integrations/meta-ads)
+- [Enhanced Conversions →](/sdk/enhanced-conversions)
+- [Deduplication →](/advanced/deduplication)
+

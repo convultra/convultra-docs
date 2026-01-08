@@ -1,0 +1,259 @@
+import { Callout } from 'nextra/components'
+
+# Click ID Capture
+
+Convultra automatically captures and stores click IDs from ad platforms, ensuring accurate attribution even when cookies fail.
+
+## Supported Click IDs
+
+| Parameter | Platform | Example |
+|-----------|----------|---------|
+| `gclid` | Google Ads | `Cj0KCQjw84anBhCtARIsAISI...` |
+| `fbclid` | Meta/Facebook Ads | `IwAR3x9kPqN7...` |
+| `msclkid` | Microsoft Ads | `0a1b2c3d4e5f...` |
+| `ttclid` | TikTok Ads | `7a8b9c0d1e2f...` |
+| `twclid` | Twitter Ads | `1234567890abcdef` |
+| `li_fat_id` | LinkedIn Ads | `abc123def456...` |
+
+---
+
+## How It Works
+
+### 1. Automatic Capture
+
+When a user lands on your site with a click ID in the URL:
+
+```
+https://yoursite.com/pricing?gclid=Cj0KCQjw84anBhCtARIsAISI...&utm_source=google
+```
+
+The SDK automatically:
+1. Extracts `gclid` and all UTM parameters
+2. Stores in localStorage with 90-day retention
+3. Adds to click history with context
+
+### 2. Click History
+
+Each captured click includes full context:
+
+```javascript
+{
+  id: 'clk_1704067200000_abc123',
+  key: 'gclid',
+  platform: 'google_ads',
+  click_id: 'Cj0KCQjw84anBhCtARIsAISI...',
+  captured_at: '2024-01-01T12:00:00Z',
+  landing_page: 'https://yoursite.com/pricing?gclid=...',
+  referrer: 'https://google.com',
+  utm_source: 'google',
+  utm_medium: 'cpc',
+  utm_campaign: 'summer-sale',
+  utm_term: 'best widgets',
+  utm_content: 'ad-variant-a'
+}
+```
+
+### 3. Conversion Attribution
+
+When a conversion occurs (days or weeks later), the SDK includes click history:
+
+```javascript
+// Conversion event includes all captured clicks
+{
+  event_type: 'purchase',
+  click_history: [
+    { platform: 'google_ads', click_id: 'Cj0KCQjw...', age_days: 14 },
+    { platform: 'meta_ads', click_id: 'IwAR3x...', age_days: 21 }
+  ]
+}
+```
+
+---
+
+## Storage Details
+
+### localStorage Keys
+
+| Key | Content | Retention |
+|-----|---------|-----------|
+| `cvl_click_history` | Array of all captured clicks | 90 days |
+| `cvl_session` | Current session with latest click IDs | 30 minutes inactivity |
+
+### Retention Policy
+
+- **Maximum entries**: 200 clicks
+- **Maximum age**: 90 days
+- **Cleanup**: Automatic on SDK init
+
+<Callout type="info">
+  **Why 90 days?**
+  
+  Most ad platforms allow attribution windows up to 90 days. Convultra stores clicks for the full window to ensure accurate attribution for long sales cycles.
+</Callout>
+
+---
+
+## Attribution Logic
+
+Convultra uses **last-click attribution** by default:
+
+```javascript
+// Multiple clicks in history
+clicks = [
+  { platform: 'meta_ads', captured_at: '2024-01-01', age_days: 21 },    // Earlier
+  { platform: 'google_ads', captured_at: '2024-01-14', age_days: 8 },   // Most recent
+]
+
+// Conversion attributed to most recent (Google Ads)
+attributed_click = { platform: 'google_ads', age_days: 8 }
+```
+
+For multi-touch attribution, see [Attribution Models →](/advanced/attribution-models)
+
+---
+
+## Facebook/Meta Cookies
+
+In addition to `fbclid`, the SDK captures Meta's browser cookies:
+
+| Cookie | Purpose | Captured |
+|--------|---------|----------|
+| `_fbc` | Click ID cookie (set by Facebook Pixel) | ✅ Yes |
+| `_fbp` | Browser ID (set by Facebook Pixel) | ✅ Yes |
+
+These are critical for Meta Conversions API matching:
+
+```javascript
+// Captured automatically
+{
+  fbc: 'fb.1.1704067200.IwAR3x9kPqN7...',
+  fbp: 'fb.1.1704067200.1234567890'
+}
+```
+
+---
+
+## Accessing Click Data
+
+### Get Attributed Click
+
+```javascript copy
+// Get most recent click (used for attribution)
+const session = Convultra.getSession()
+console.log(session.gclid)    // 'Cj0KCQjw...'
+console.log(session.fbclid)   // null
+console.log(session.msclkid)  // null
+```
+
+### Get Click History
+
+```javascript copy
+// Get full click history (for analytics)
+// Note: This uses internal API, not recommended for production use
+const history = localStorage.getItem('cvl_click_history')
+const clicks = JSON.parse(history)
+console.log(clicks)
+```
+
+---
+
+## Cross-Domain Click Preservation
+
+When using [cross-domain tracking](/advanced/cross-domain-tracking), click IDs are preserved across domains:
+
+```
+Domain A (landing)     →     Domain B (conversion)
+─────────────────────────────────────────────────────
+gclid captured         →     gclid available
+Session started        →     Session continued
+UTMs captured          →     UTMs preserved
+```
+
+Enable cross-domain tracking:
+
+```html copy
+<script
+  src="https://cdn.convultra.com/ultra.min.js"
+  data-convultra-key="proj_xxx"
+  data-cross-domain="checkout.example.com,app.example.com"
+></script>
+```
+
+---
+
+## Testing Click Capture
+
+### 1. Simulate Ad Click
+
+Visit your site with a test click ID:
+
+```
+https://yoursite.com/?gclid=test_gclid_12345&utm_source=google&utm_medium=cpc
+```
+
+### 2. Check Storage
+
+Open DevTools → Application → Local Storage:
+
+```javascript
+cvl_click_history: [
+  {
+    key: 'gclid',
+    platform: 'google_ads',
+    click_id: 'test_gclid_12345',
+    utm_source: 'google',
+    utm_medium: 'cpc'
+  }
+]
+```
+
+### 3. Track Test Conversion
+
+```javascript
+Convultra.trackPurchase({
+  orderId: 'TEST-001',
+  value: 99.99
+})
+```
+
+### 4. Verify in Network Tab
+
+The tracking request should include:
+
+```javascript
+{
+  gclid: 'test_gclid_12345',
+  click_history: [{ platform: 'google_ads', click_id: 'test_gclid_12345' }]
+}
+```
+
+---
+
+## Troubleshooting
+
+### Click ID Not Captured
+
+1. **Check URL**: Ensure click ID is in URL when page loads
+2. **Check SDK**: Verify SDK is loaded before checking storage
+3. **Check localStorage**: Some privacy modes block localStorage
+
+### Click ID Missing from Conversion
+
+1. **Check session**: `Convultra.getSession()` should show click IDs
+2. **Check history**: Verify `cvl_click_history` has entries
+3. **Check age**: Clicks older than 90 days are purged
+
+### Cross-Domain Issues
+
+1. **Same API key**: Both domains must use the same project key
+2. **Enable cross-domain**: Set `data-cross-domain` attribute
+3. **Check `_cvl` param**: URL should contain linker parameter
+
+---
+
+## Next Steps
+
+- [Session Management →](/sdk/session-management)
+- [Cross-Domain Tracking →](/advanced/cross-domain-tracking)
+- [Attribution Models →](/advanced/attribution-models)
+

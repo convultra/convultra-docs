@@ -1,0 +1,375 @@
+import { Callout, Tabs, Tab } from 'nextra/components'
+
+# Server API
+
+Track events server-side for maximum reliability and privacy.
+
+## Overview
+
+The Server API allows you to send events directly from your backend, bypassing client-side limitations entirely.
+
+**Use cases:**
+- Backend order confirmations
+- Webhook integrations
+- High-security environments
+- Hybrid tracking (client + server)
+
+---
+
+## Authentication
+
+All server API requests require your **Server API Key**.
+
+<Callout type="error">
+  Keep your Server Key secret! Never expose it in client-side code.
+</Callout>
+
+Include in headers:
+
+```bash
+Authorization: Bearer YOUR_SERVER_API_KEY
+```
+
+Or as query parameter:
+
+```bash
+?api_key=YOUR_SERVER_API_KEY
+```
+
+---
+
+## Track Event
+
+### Endpoint
+
+```
+POST https://your-endpoint.com/v1/track
+```
+
+### Request
+
+```bash
+curl -X POST https://your-endpoint.com/v1/track \
+  -H "Authorization: Bearer YOUR_SERVER_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "event_type": "purchase",
+    "timestamp": "2024-01-15T14:30:45Z",
+    "session_id": "sess_abc123",
+    "user_id": "user_12345",
+    "properties": {
+      "order_id": "ORD-12345",
+      "value": 99.99,
+      "currency": "USD"
+    },
+    "user_data": {
+      "email": "customer@example.com",
+      "phone": "+1234567890"
+    },
+    "context": {
+      "ip": "203.0.113.0",
+      "user_agent": "Mozilla/5.0...",
+      "page_url": "https://yoursite.com/checkout"
+    }
+  }'
+```
+
+### Request Body
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `event_type` | `string` | Yes | Event name |
+| `timestamp` | `string` | No | ISO 8601 timestamp (default: now) |
+| `session_id` | `string` | No | Session ID from client |
+| `user_id` | `string` | No | Your user identifier |
+| `properties` | `object` | No | Event properties |
+| `user_data` | `object` | No | Enhanced Conversions data |
+| `context` | `object` | No | Request context |
+
+### Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `order_id` | `string` | Order/transaction ID |
+| `value` | `number` | Event value |
+| `currency` | `string` | ISO currency code |
+| `items` | `array` | Product items |
+
+### User Data
+
+All fields are automatically hashed before sending to ad platforms.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `email` | `string` | Customer email |
+| `phone` | `string` | Phone (E.164 format) |
+| `first_name` | `string` | First name |
+| `last_name` | `string` | Last name |
+| `city` | `string` | City |
+| `state` | `string` | State/region |
+| `postal_code` | `string` | ZIP/postal code |
+| `country` | `string` | Country code |
+
+### Context
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `ip` | `string` | Client IP address |
+| `user_agent` | `string` | Browser user agent |
+| `page_url` | `string` | Page URL |
+| `referrer` | `string` | Referrer URL |
+| `gclid` | `string` | Google Click ID |
+| `fbclid` | `string` | Facebook Click ID |
+| `msclkid` | `string` | Microsoft Click ID |
+
+### Response
+
+**Success (200)**
+
+```json
+{
+  "success": true,
+  "event_id": "evt_1704067200000_abc123"
+}
+```
+
+**Error (4xx/5xx)**
+
+```json
+{
+  "success": false,
+  "error": "Invalid API key"
+}
+```
+
+---
+
+## Batch Track
+
+Send multiple events in one request.
+
+### Endpoint
+
+```
+POST https://your-endpoint.com/v1/track/batch
+```
+
+### Request
+
+```bash
+curl -X POST https://your-endpoint.com/v1/track/batch \
+  -H "Authorization: Bearer YOUR_SERVER_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "events": [
+      {
+        "event_type": "purchase",
+        "properties": { "order_id": "ORD-001", "value": 99.99 }
+      },
+      {
+        "event_type": "purchase",
+        "properties": { "order_id": "ORD-002", "value": 149.99 }
+      }
+    ]
+  }'
+```
+
+### Limits
+
+| Limit | Value |
+|-------|-------|
+| Max events per batch | 100 |
+| Max request size | 1 MB |
+| Rate limit | 1000 req/min |
+
+---
+
+## Code Examples
+
+<Tabs items={['Node.js', 'Python', 'PHP', 'Ruby']}>
+  <Tab>
+```javascript
+const axios = require('axios')
+
+async function trackPurchase(order) {
+  await axios.post('https://your-endpoint.com/v1/track', {
+    event_type: 'purchase',
+    properties: {
+      order_id: order.id,
+      value: order.total,
+      currency: 'USD'
+    },
+    user_data: {
+      email: order.customer.email,
+      phone: order.customer.phone
+    },
+    context: {
+      session_id: order.session_id,
+      ip: order.ip_address
+    }
+  }, {
+    headers: {
+      'Authorization': `Bearer ${process.env.CONVULTRA_SERVER_KEY}`,
+      'Content-Type': 'application/json'
+    }
+  })
+}
+```
+  </Tab>
+  <Tab>
+```python
+import requests
+
+def track_purchase(order):
+    response = requests.post(
+        'https://your-endpoint.com/v1/track',
+        json={
+            'event_type': 'purchase',
+            'properties': {
+                'order_id': order['id'],
+                'value': order['total'],
+                'currency': 'USD'
+            },
+            'user_data': {
+                'email': order['customer']['email'],
+                'phone': order['customer']['phone']
+            }
+        },
+        headers={
+            'Authorization': f'Bearer {os.environ["CONVULTRA_SERVER_KEY"]}',
+            'Content-Type': 'application/json'
+        }
+    )
+    return response.json()
+```
+  </Tab>
+  <Tab>
+```php
+<?php
+function trackPurchase($order) {
+    $ch = curl_init('https://your-endpoint.com/v1/track');
+    
+    curl_setopt_array($ch, [
+        CURLOPT_POST => true,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_HTTPHEADER => [
+            'Authorization: Bearer ' . getenv('CONVULTRA_SERVER_KEY'),
+            'Content-Type: application/json'
+        ],
+        CURLOPT_POSTFIELDS => json_encode([
+            'event_type' => 'purchase',
+            'properties' => [
+                'order_id' => $order['id'],
+                'value' => $order['total'],
+                'currency' => 'USD'
+            ],
+            'user_data' => [
+                'email' => $order['customer']['email']
+            ]
+        ])
+    ]);
+    
+    $response = curl_exec($ch);
+    curl_close($ch);
+    
+    return json_decode($response, true);
+}
+```
+  </Tab>
+  <Tab>
+```ruby
+require 'net/http'
+require 'json'
+
+def track_purchase(order)
+  uri = URI('https://your-endpoint.com/v1/track')
+  
+  http = Net::HTTP.new(uri.host, uri.port)
+  http.use_ssl = true
+  
+  request = Net::HTTP::Post.new(uri.path)
+  request['Authorization'] = "Bearer #{ENV['CONVULTRA_SERVER_KEY']}"
+  request['Content-Type'] = 'application/json'
+  request.body = {
+    event_type: 'purchase',
+    properties: {
+      order_id: order[:id],
+      value: order[:total],
+      currency: 'USD'
+    },
+    user_data: {
+      email: order[:customer][:email]
+    }
+  }.to_json
+  
+  response = http.request(request)
+  JSON.parse(response.body)
+end
+```
+  </Tab>
+</Tabs>
+
+---
+
+## Linking Client and Server
+
+Pass the client session to your server for unified tracking:
+
+### Client Side
+
+```javascript
+// Get session ID
+const sessionId = Convultra.getSessionId()
+
+// Include in form/checkout
+<input type="hidden" name="session_id" value={sessionId} />
+```
+
+### Server Side
+
+```javascript
+// Use same session for server events
+await axios.post('https://your-endpoint.com/v1/track', {
+  event_type: 'purchase',
+  session_id: req.body.session_id, // From client
+  properties: { ... }
+})
+```
+
+---
+
+## Error Handling
+
+| Status | Meaning | Action |
+|--------|---------|--------|
+| 200 | Success | Event tracked |
+| 400 | Bad request | Check request format |
+| 401 | Unauthorized | Check API key |
+| 429 | Rate limited | Back off, retry later |
+| 500 | Server error | Retry with backoff |
+
+### Retry Strategy
+
+```javascript
+async function trackWithRetry(event, maxRetries = 3) {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await track(event)
+    } catch (error) {
+      if (error.response?.status === 429 || error.response?.status >= 500) {
+        await sleep(1000 * Math.pow(2, i)) // Exponential backoff
+        continue
+      }
+      throw error
+    }
+  }
+}
+```
+
+---
+
+## Next Steps
+
+- [Webhooks →](/api-reference/webhooks)
+- [Pixel Tracking →](/api-reference/pixel-tracking)
+

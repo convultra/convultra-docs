@@ -1,0 +1,390 @@
+import { Callout, Tabs, Tab, Steps } from 'nextra/components'
+
+# Enhanced Conversions
+
+Enhanced Conversions increase match rates by providing hashed user data to ad platforms. This improves attribution accuracy, especially for cross-device conversions.
+
+## Overview
+
+When a user converts, ad platforms try to match the conversion back to an ad click. Without user data, they rely solely on cookies and click IDs, which can fail when:
+
+- Cookies are blocked or expired
+- User converts on a different device
+- Click ID is missing from the conversion
+
+Enhanced Conversions solve this by sending hashed user data (email, phone, address) that platforms can use to match users.
+
+```
+Standard Tracking         Enhanced Conversions
+─────────────────         ────────────────────
+Click ID only        →    Click ID + Email Hash + Phone Hash
+50-70% match rate    →    85-95% match rate
+```
+
+---
+
+## How It Works
+
+<Steps>
+### Collect User Data
+
+During checkout/signup, collect user information:
+- Email address
+- Phone number
+- Name and address (optional)
+
+### Hash Automatically
+
+Convultra automatically:
+- Normalizes data (lowercase, trim whitespace)
+- Hashes with SHA-256
+- Never stores or transmits raw PII
+
+### Forward to Platforms
+
+Hashed data is sent to:
+- Google Ads (Enhanced Conversions for Web)
+- Meta (Advanced Matching via CAPI)
+- Microsoft Ads (Enhanced Conversions)
+</Steps>
+
+---
+
+## Implementation Methods
+
+### Method 1: Combined Tracking (Recommended)
+
+Track conversion and user data in one call:
+
+```javascript copy
+Convultra.trackConversion('purchase',
+  // Conversion data
+  {
+    orderId: 'ORDER-12345',
+    value: 149.99,
+    currency: 'USD'
+  },
+  // User data (will be hashed)
+  {
+    email: 'customer@example.com',
+    phone: '+1234567890',
+    firstName: 'John',
+    lastName: 'Doe'
+  }
+)
+```
+
+### Method 2: Identify + Track
+
+Pre-identify user, then track conversion:
+
+```javascript copy
+// First, identify the user (data stored for all future events)
+Convultra.identify('user_123', {
+  email: 'customer@example.com',
+  phone: '+1234567890',
+  firstName: 'John',
+  lastName: 'Doe'
+})
+
+// Later, track conversion (user data automatically included)
+Convultra.trackPurchase({
+  orderId: 'ORDER-12345',
+  value: 149.99,
+  currency: 'USD'
+})
+```
+
+### Method 3: Two-Stage Enhancement
+
+Track conversion first, add user data later:
+
+```javascript copy
+// Stage 1: Track conversion (user not logged in yet)
+Convultra.track('purchase', {
+  orderId: 'ORDER-12345',
+  value: 149.99
+})
+
+// Stage 2: User enters email for receipt (within 30 minutes)
+Convultra.enhance({
+  email: 'customer@example.com',
+  phone: '+1234567890'
+})
+```
+
+---
+
+## Supported User Data
+
+### Required (Minimum One)
+
+| Field | Format | Example |
+|-------|--------|---------|
+| `email` | Email address | `user@example.com` |
+| `phone` | Phone with country code | `+1234567890` |
+
+### Recommended (Better Matching)
+
+| Field | Format | Example |
+|-------|--------|---------|
+| `firstName` | First name | `John` |
+| `lastName` | Last name | `Doe` |
+
+### Optional (Best Matching)
+
+| Field | Format | Example |
+|-------|--------|---------|
+| `street` | Street address | `123 Main St` |
+| `city` | City | `New York` |
+| `state` | State/province | `NY` |
+| `postalCode` | Postal/ZIP code | `10001` |
+| `country` | Country code | `US` |
+
+---
+
+## Match Rate Tiers
+
+| Data Provided | Match Rate |
+|---------------|------------|
+| Click ID only | 50-70% |
+| + Email | 75-85% |
+| + Email + Phone | 85-92% |
+| + Email + Phone + Name | 90-95% |
+| + Email + Phone + Name + Address | 93-98% |
+
+<Callout type="info">
+  Google reports that Enhanced Conversions can recover up to 5-15% additional conversions that would otherwise be missed.
+</Callout>
+
+---
+
+## Platform-Specific Details
+
+### Google Ads Enhanced Conversions
+
+Data sent to Google Ads Offline Conversions API:
+
+```javascript
+// What Convultra sends (hashed)
+{
+  conversionAction: 'customers/123/conversionActions/456',
+  gclid: 'Cj0KCQjw...',
+  conversionDateTime: '2024-01-15 12:30:45-05:00',
+  conversionValue: 99.99,
+  currencyCode: 'USD',
+  orderId: 'ORDER-12345',
+  userIdentifiers: [
+    { hashedEmail: 'sha256_e3b0c44298fc1c14...' },
+    { hashedPhoneNumber: 'sha256_a7b9c3d4e5f6...' },
+    { addressInfo: {
+        hashedFirstName: 'sha256_...',
+        hashedLastName: 'sha256_...',
+        hashedStreetAddress: 'sha256_...',
+        city: 'New York',
+        state: 'NY',
+        countryCode: 'US',
+        postalCode: '10001'
+      }
+    }
+  ]
+}
+```
+
+### Meta Conversions API
+
+Data sent to Meta CAPI:
+
+```javascript
+// What Convultra sends
+{
+  event_name: 'Purchase',
+  event_time: 1704067200,
+  action_source: 'website',
+  user_data: {
+    em: ['sha256_email_hash'],
+    ph: ['sha256_phone_hash'],
+    fn: ['sha256_first_name_hash'],
+    ln: ['sha256_last_name_hash'],
+    ct: ['sha256_city_hash'],
+    st: ['sha256_state_hash'],
+    zp: ['10001'],
+    country: ['us'],
+    fbc: 'fb.1.1704067200.IwAR3x...',
+    fbp: 'fb.1.1704067200.abc123'
+  },
+  custom_data: {
+    value: 99.99,
+    currency: 'USD',
+    order_id: 'ORDER-12345'
+  }
+}
+```
+
+### Microsoft Ads
+
+Data sent to Microsoft Ads API:
+
+```javascript
+{
+  conversionName: 'Purchase',
+  conversionTime: '2024-01-15T12:30:45Z',
+  conversionValue: 99.99,
+  currencyCode: 'USD',
+  msclkid: 'abc123...',
+  HashedEmailAddress: 'sha256_...',
+  HashedPhoneNumber: 'sha256_...'
+}
+```
+
+---
+
+## Privacy & Security
+
+### Data Handling
+
+1. **Normalization**: Email lowercased, phone stripped of non-digits
+2. **Hashing**: SHA-256 applied before any network transmission
+3. **No Storage**: Raw PII is never stored in Convultra systems
+4. **Encrypted Transit**: All data transmitted over HTTPS
+
+### Example Transformation
+
+```javascript
+// Input (what you provide)
+{
+  email: 'John.Doe@Example.com ',
+  phone: '+1 (555) 123-4567'
+}
+
+// Normalized
+{
+  email: 'john.doe@example.com',
+  phone: '15551234567'
+}
+
+// Hashed (what is transmitted)
+{
+  email: 'sha256_e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+  phone: 'sha256_a7b9c3d4e5f6a7b9c3d4e5f6a7b9c3d4e5f6a7b9c3d4e5f6a7b9c3d4e5f6a7b9'
+}
+```
+
+---
+
+## Best Practices
+
+### 1. Collect Early
+
+Collect user data as early as possible in the funnel:
+
+```javascript
+// On email capture (newsletter, account creation)
+Convultra.identify('temp_' + Date.now(), {
+  email: email
+})
+
+// Data persists for all subsequent conversions
+```
+
+### 2. Use All Available Data
+
+More data = higher match rates:
+
+```javascript
+// ✅ Good - maximum data
+Convultra.trackConversion('purchase', conversionData, {
+  email: 'user@example.com',
+  phone: '+1234567890',
+  firstName: 'John',
+  lastName: 'Doe',
+  street: '123 Main St',
+  city: 'New York',
+  postalCode: '10001',
+  country: 'US'
+})
+
+// ⚠️ Okay - minimum data
+Convultra.trackConversion('purchase', conversionData, {
+  email: 'user@example.com'
+})
+```
+
+### 3. Validate Phone Numbers
+
+Include country code for reliable matching:
+
+```javascript
+// ✅ Good - with country code
+{ phone: '+1234567890' }
+{ phone: '+44 20 7946 0958' }
+
+// ❌ Bad - missing country code
+{ phone: '234567890' }
+```
+
+---
+
+## Testing Enhanced Conversions
+
+### 1. Enable Debug Mode
+
+```javascript
+Convultra.init('proj_xxx', { debug: true })
+```
+
+### 2. Check Console Output
+
+Look for:
+```
+[Convultra] Conversion enhancement sent: ORDER-12345 { email: 'sha256_...', phone: 'sha256_...' }
+```
+
+### 3. Verify in Platforms
+
+- **Google Ads**: Conversions → Enhanced Conversions Diagnostics
+- **Meta**: Events Manager → Data Sources → Data Quality
+- **Microsoft**: Tools → Offline Conversions → Match Rate
+
+---
+
+## Helper Methods
+
+### Set User Data Globally
+
+```javascript copy
+// Set once, applied to all future conversions
+Convultra.setEnhancedUserData({
+  email: 'user@example.com',
+  phone: '+1234567890',
+  firstName: 'John',
+  lastName: 'Doe'
+})
+```
+
+### Enhance Recent Conversions
+
+```javascript copy
+// After user enters email, enhance their recent conversions
+Convultra.enhanceRecentConversions({
+  email: 'user@example.com'
+}, 3) // Enhance last 3 conversions
+```
+
+### Check User Data Status
+
+```javascript copy
+// Check if we have enough data for enhancement
+if (Convultra.hasUserData()) {
+  console.log('Enhanced conversions enabled')
+}
+```
+
+---
+
+## Next Steps
+
+- [Click ID Capture →](/sdk/click-id-capture)
+- [Session Management →](/sdk/session-management)
+- [Google Ads Integration →](/integrations/google-ads)
+

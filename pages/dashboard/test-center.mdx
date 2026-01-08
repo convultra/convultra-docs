@@ -1,0 +1,266 @@
+import { Callout, Steps, Tabs, Tab } from 'nextra/components'
+
+# Test Center
+
+The Test Center helps you verify your Convultra implementation is working correctly.
+
+## Overview
+
+Access the Test Center at **Dashboard → Test**
+
+The Test Center provides:
+- 🔍 **Live event viewer** - See events in real-time
+- ✅ **Implementation checker** - Verify SDK setup
+- 🧪 **Test event sender** - Send test conversions
+- 🔗 **Platform verification** - Test forwarding
+
+---
+
+## Live Event Viewer
+
+### Real-Time Events
+
+See events as they come in:
+
+| Column | Description |
+|--------|-------------|
+| Time | Event timestamp |
+| Type | Event name |
+| Page | URL where fired |
+| Details | Value, properties |
+
+### Filtering
+
+Filter by:
+- Event type
+- Page URL
+- Session ID
+
+### Identify Your Session
+
+To filter to just your events:
+
+1. Open your website in a new tab
+2. Open browser console
+3. Type `Convultra.getSessionId()` or `__CONVULTRA.getSessionId()`
+4. Copy the session ID
+5. Paste in Test Center filter
+
+---
+
+## Implementation Checker
+
+### Automatic Checks
+
+The checker verifies:
+
+| Check | Description |
+|-------|-------------|
+| ✅ **SDK Loaded** | Script is on the page |
+| ✅ **Initialized** | `init()` called with valid key |
+| ✅ **Endpoint** | Server responding |
+| ✅ **Page Events** | Pageviews firing |
+| ✅ **Click Capture** | Click IDs being stored |
+
+### Running Checks
+
+<Steps>
+### Enter Your URL
+
+Type your website URL and click **Check**
+
+### Wait for Analysis
+
+The checker loads your page and verifies tracking
+
+### Review Results
+
+Green = passing, Red = issues found
+</Steps>
+
+### Common Issues
+
+| Issue | Cause | Fix |
+|-------|-------|-----|
+| SDK not found | Script not loaded | Add script tag |
+| Init not called | Missing initialization | Call `init()` |
+| Invalid API key | Wrong project key | Check API key |
+| Blocked requests | Ad blocker | Test in clean browser |
+
+---
+
+## Test Event Sender
+
+### Send Test Conversions
+
+Test that conversions flow correctly:
+
+<Steps>
+### Select Event Type
+
+Choose: purchase, lead, signup, or custom
+
+### Configure Event
+
+Set value, properties, and user data
+
+### Send Test
+
+Click **Send Test Event**
+
+### Verify
+
+Check it appears in:
+1. Test Center live view
+2. Conversions list
+3. Connected platforms (if enabled)
+</Steps>
+
+### Test Event Example
+
+```javascript
+// What the Test Center sends
+{
+  event_type: 'purchase',
+  value: 100,
+  currency: 'USD',
+  orderId: 'TEST-12345',
+  test: true,  // Marked as test
+  userData: {
+    email: 'test@example.com'
+  }
+}
+```
+
+<Callout type="warning">
+  Test events are marked with `test: true` and can be filtered out in reporting.
+</Callout>
+
+---
+
+## Platform Testing
+
+### Test Platform Forwarding
+
+Verify conversions reach connected platforms:
+
+<Steps>
+### Select Platform
+
+Choose Google Ads, Meta, Microsoft, etc.
+
+### Send Test Conversion
+
+Click **Send Test Conversion**
+
+### Check Platform
+
+Verify in platform's test/debug tool:
+- Google Ads: Conversions → Import
+- Meta: Events Manager → Test Events
+- Microsoft: Conversions → Import log
+</Steps>
+
+### Test Mode
+
+Some platforms have test/sandbox modes:
+
+| Platform | Test Feature |
+|----------|-------------|
+| Meta | Test Events in Events Manager |
+| TikTok | Test Events in Events Manager |
+| LinkedIn | Test event in Conversions |
+
+---
+
+## Debug Mode
+
+### Enable Debug Logging
+
+In your website's console:
+
+```javascript
+Convultra.debug(true)
+```
+
+This logs:
+- All events sent
+- Server responses
+- Errors
+- Click ID captures
+
+### Debug Output Example
+
+```
+[Convultra] Initialized with project: proj_abc123
+[Convultra] Session started: sess_xyz789
+[Convultra] Page view sent: /thank-you
+[Convultra] Click ID captured: gclid=Cj0KCQjw...
+[Convultra] Event sent: purchase {value: 99.99, orderId: "ORD-123"}
+[Convultra] Response: 200 OK
+```
+
+---
+
+## Testing Checklist
+
+### Pre-Launch
+
+- [ ] SDK loading on all pages
+- [ ] Page views tracking
+- [ ] Click IDs captured (add test gclid to URL)
+- [ ] Conversions tracking
+- [ ] Enhanced Conversions data included
+- [ ] Platform forwarding working
+
+### Testing Click ID Capture
+
+Add click IDs to your URL manually:
+
+```
+https://yoursite.com/?gclid=test_gclid_123
+https://yoursite.com/?fbclid=test_fbclid_456
+```
+
+Then check:
+1. Browser console: `localStorage.getItem('_cu_gclid')`
+2. Conversion events include the click ID
+
+### Testing Cross-Domain
+
+1. Start on domain-a.com
+2. Click link to domain-b.com
+3. Check URL has `_cvl` parameter
+4. Verify session continues on domain-b
+
+---
+
+## Troubleshooting
+
+### Events Not Appearing
+
+1. **Check console errors** - Any JS errors?
+2. **Check network tab** - Are requests being made?
+3. **Check ad blocker** - Disable and retry
+4. **Check API key** - Is it correct?
+
+### Platform Forwarding Failing
+
+1. **Check connection status** - Is it active?
+2. **Check mapping** - Is event type mapped?
+3. **Check logs** - What's the error?
+4. **Re-authenticate** - Token may have expired
+
+### Duplicate Events
+
+1. **Check page reloads** - Event firing on reload?
+2. **Check multiple SDK instances** - Script added twice?
+3. **Check SPA navigation** - Manual pageview calls needed?
+
+---
+
+## Next Steps
+
+- [Settings →](/dashboard/settings)
+- [Troubleshooting →](/troubleshooting)
+

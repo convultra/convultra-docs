@@ -1,0 +1,181 @@
+import { Cards, Card, Callout } from 'nextra/components'
+
+# Platform Integrations
+
+Connect Convultra to your ad platforms for automatic server-side conversion forwarding.
+
+## Why Server-Side Forwarding?
+
+When you connect your ad accounts, Convultra automatically forwards conversions via each platform's server-to-server API:
+
+| Method | Reliability | Blocked by Ad Blockers | Cookie Dependent |
+|--------|-------------|------------------------|------------------|
+| gtag.js / Facebook Pixel | 60-70 percent | ✅ Yes | ✅ Yes |
+| **Convultra Server-Side** | **95-98 percent** | **❌ No** | **❌ No** |
+
+Benefits:
+- ✅ **Bypass ad blockers** - Server-to-server, nothing to block
+- ✅ **Survive cookie limits** - Uses click ID history, not cookies
+- ✅ **Real-time** - Conversions sent in under 5 minutes
+- ✅ **Enhanced matching** - Hashed user data for better attribution
+- ✅ **Automatic deduplication** - No double-counting
+
+---
+
+## Supported Platforms
+
+<Cards>
+  <Card title="Google Ads" href="/integrations/google-ads">
+    Offline Conversions API with Enhanced Conversions
+  </Card>
+  <Card title="Meta/Facebook Ads" href="/integrations/meta-ads">
+    Conversions API (CAPI) with Advanced Matching
+  </Card>
+  <Card title="Microsoft Ads" href="/integrations/microsoft-ads">
+    Offline Conversions with Enhanced Matching
+  </Card>
+  <Card title="TikTok Ads" href="/integrations/tiktok-ads">
+    Events API for server-side tracking
+  </Card>
+  <Card title="LinkedIn Ads" href="/integrations/linkedin-ads">
+    Conversions API for B2B tracking
+  </Card>
+</Cards>
+
+---
+
+## How It Works
+
+```
+1. User clicks ad → Lands on your site with click ID
+         ↓
+2. Convultra SDK captures click ID (gclid, fbclid, etc.)
+         ↓
+3. User converts → SDK sends conversion to Convultra
+         ↓
+4. Convultra forwards to connected platforms via API
+         ↓
+5. Platforms attribute conversion to original ad click
+```
+
+### Data Forwarded
+
+Each conversion includes:
+
+| Data | Purpose |
+|------|---------|
+| Click ID (gclid, fbclid, etc.) | Primary attribution |
+| Timestamp | Conversion time |
+| Value & Currency | Revenue tracking |
+| Order/Lead ID | Deduplication |
+| Hashed User Data | Enhanced matching |
+
+---
+
+## Quick Setup
+
+<Callout type="info">
+  Integration requires OAuth authorization. You'll need admin access to your ad accounts.
+</Callout>
+
+### 1. Navigate to Integrations
+
+Go to **Dashboard → Integrations**
+
+### 2. Connect Platform
+
+Click "Connect" on your desired platform and complete OAuth authorization.
+
+### 3. Select Accounts
+
+Choose which ad accounts should receive conversions.
+
+### 4. Map Conversion Actions
+
+Map Convultra event types to platform conversion actions:
+
+| Convultra Event | Platform Action |
+|-----------------|-----------------|
+| `purchase` | Purchase / Transaction |
+| `lead` | Lead / Submit form |
+| `signup` | Sign-up / Complete registration |
+| `subscription` | Subscribe |
+
+### 5. Test
+
+Use the Test Center (**Dashboard → Test**) to send a test conversion.
+
+---
+
+## Platform Comparison
+
+| Feature | Google Ads | Meta Ads | Microsoft Ads | TikTok |
+|---------|------------|----------|---------------|--------|
+| Click ID | gclid | fbclid | msclkid | ttclid |
+| API | Offline Conversions | CAPI | Offline Conversions | Events API |
+| Enhanced Matching | ✅ Yes | ✅ Yes | ✅ Yes | ✅ Yes |
+| Attribution Window | 90 days | 28 days | 90 days | 28 days |
+| Real-time | under 5 min | under 5 min | under 5 min | under 5 min |
+
+---
+
+## Monitoring & Logs
+
+### Conversion Forward Logs
+
+View detailed logs for each forwarded conversion:
+
+**Dashboard → Integrations → View Forwarding Logs**
+
+Each log entry shows:
+- ✅ **Success** - Conversion accepted by platform
+- ❌ **Failed** - Error details and retry status
+- 🔄 **Retrying** - Automatic retry in progress
+
+### Platform-Specific Verification
+
+After connecting, verify in each platform:
+
+- **Google Ads**: Conversions → Recent conversions
+- **Meta Ads**: Events Manager → Data Sources
+- **Microsoft Ads**: Conversions → Conversion tracking
+- **TikTok**: Events Manager → Web events
+
+---
+
+## Troubleshooting
+
+### Conversions Not Appearing
+
+1. **Check integration status** - Is the connection active?
+2. **Check mapping** - Is the event type mapped?
+3. **Check logs** - Are there any errors?
+4. **Check platform** - Sometimes platforms have delays (up to 24 hours)
+
+### Authentication Errors
+
+1. **Re-authorize** - Token may have expired
+2. **Check permissions** - Ensure admin access to accounts
+3. **Check account status** - Account may be suspended
+
+### Match Rate Low
+
+1. **Enable Enhanced Conversions** - Add user data
+2. **Check click ID capture** - Verify gclid/fbclid in URL
+3. **Check timing** - Conversions within attribution window
+
+---
+
+## Next Steps
+
+Choose a platform to get started:
+
+<Cards>
+  <Card title="Google Ads →" href="/integrations/google-ads">
+    Most common integration
+  </Card>
+  <Card title="Meta Ads →" href="/integrations/meta-ads">
+    Required for Facebook/Instagram ads
+  </Card>
+</Cards>
+

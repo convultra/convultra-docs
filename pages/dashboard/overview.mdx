@@ -1,0 +1,123 @@
+import { Callout, Cards, Card } from 'nextra/components'
+
+# Dashboard Overview
+
+The Convultra Dashboard provides real-time insights into your conversion tracking performance.
+
+## Getting Started
+
+Access your dashboard at [app.convultra.com](https://app.convultra.com)
+
+After logging in, you'll see:
+
+1. **Project Selector** - Switch between projects
+2. **Time Range Picker** - Filter data by date range
+3. **Navigation** - Analytics, Conversions, Integrations, Test Center
+
+---
+
+## Key Metrics
+
+### Overview Section
+
+| Metric | Description |
+|--------|-------------|
+| **Unique Visitors** | Distinct users (by fingerprint/session) |
+| **Pageviews** | Total page views tracked |
+| **Conversions** | Total conversion events |
+| **Conversion Rate** | Conversions / Unique Visitors |
+| **Revenue** | Total conversion value |
+
+### Trend Chart
+
+The main chart shows your key metrics over time:
+- Toggle between Visitors, Pageviews, Conversions, Revenue
+- Hover for daily/hourly breakdown
+- Compare to previous period
+
+---
+
+## Dashboard Sections
+
+<Cards>
+  <Card title="Analytics" href="/dashboard/analytics">
+    Traffic sources, top pages, geography, devices
+  </Card>
+  <Card title="Conversions" href="/dashboard/conversions">
+    Conversion list, attribution, forwarding status
+  </Card>
+  <Card title="Test Center" href="/dashboard/test-center">
+    Test your tracking implementation
+  </Card>
+  <Card title="Settings" href="/dashboard/settings">
+    Project configuration, API keys
+  </Card>
+</Cards>
+
+---
+
+## Time Ranges
+
+Available time range options:
+
+| Option | Description |
+|--------|-------------|
+| Today | Current day |
+| Yesterday | Previous day |
+| Last 7 days | Rolling 7-day window |
+| Last 30 days | Rolling 30-day window |
+| Last 90 days | Rolling 90-day window |
+| Custom | Pick specific dates |
+
+---
+
+## Real-Time Updates
+
+The dashboard shows near real-time data:
+
+- **Events**: ~2-5 seconds delay
+- **Aggregations**: ~30 seconds delay
+- **Conversion forwarding**: ~5 minutes delay
+
+<Callout>
+  Auto-refresh is enabled by default. Toggle it off in settings if needed.
+</Callout>
+
+---
+
+## Multi-Project Support
+
+Manage multiple projects (websites) from one account:
+
+1. Click the project dropdown in the header
+2. Select a project to view its data
+3. Or click "Add Project" to create new
+
+Each project has:
+- Unique API key
+- Separate analytics data
+- Independent integration connections
+
+---
+
+## Bot Filtering
+
+By default, the dashboard filters out known bots:
+
+| Category | Examples | Filtered |
+|----------|----------|----------|
+| Search bots | Googlebot, Bingbot | ✅ Yes |
+| AI crawlers | ChatGPT-User, Claude-Web | ✅ Yes |
+| Monitoring | Uptime Robot, Pingdom | ✅ Yes |
+| Scrapers | Various | ✅ Yes |
+
+Toggle **"Include Bots"** to see all traffic.
+
+---
+
+## Next Steps
+
+- [Analytics Deep Dive →](/dashboard/analytics)
+- [Conversions & Attribution →](/dashboard/conversions)
+- [Test Your Implementation →](/dashboard/test-center)
+

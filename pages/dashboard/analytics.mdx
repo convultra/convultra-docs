@@ -1,0 +1,224 @@
+import { Callout, Tabs, Tab } from 'nextra/components'
+
+# Analytics
+
+Convultra provides Plausible-style analytics that respect privacy while giving you actionable insights.
+
+## Overview Metrics
+
+The main dashboard shows:
+
+| Metric | Description | Calculation |
+|--------|-------------|-------------|
+| **Unique Visitors** | Distinct users | Fingerprint + session dedup |
+| **Pageviews** | Total pages viewed | Count of `pageview` events |
+| **Bounce Rate** | Single-page visits | Visits with 1 pageview / Total visits |
+| **Avg. Duration** | Time on site | Session end - Session start |
+
+---
+
+## Traffic Sources
+
+### Channels
+
+See where your traffic comes from:
+
+| Channel | How Identified |
+|---------|----------------|
+| **Direct** | No referrer |
+| **Organic Search** | Google, Bing, etc. without paid parameters |
+| **Paid Search** | Google/Bing with gclid/msclkid |
+| **Social** | Facebook, Twitter, LinkedIn, etc. |
+| **Referral** | Other websites |
+| **Email** | utm_medium=email |
+| **AI Referral** | ChatGPT, Claude, Perplexity |
+
+### AI Referral Tracking
+
+Convultra uniquely tracks traffic from AI platforms:
+
+| Platform | Referrer Pattern |
+|----------|-----------------|
+| ChatGPT | chatgpt.com |
+| Claude | claude.ai |
+| Perplexity | perplexity.ai |
+| Google Bard/Gemini | bard.google.com |
+| Bing Copilot | bing.com/chat |
+
+View AI traffic in **Analytics → AI Referrals**
+
+### Referrers
+
+The Referrers table shows:
+- Domain of referring site
+- Number of visitors
+- Conversion count & rate
+
+### UTM Parameters
+
+Break down traffic by UTM tags:
+
+- **utm_source** - Traffic source (google, facebook)
+- **utm_medium** - Marketing medium (cpc, email, social)
+- **utm_campaign** - Campaign name
+- **utm_term** - Paid search keywords
+- **utm_content** - A/B test variations
+
+---
+
+## Top Pages
+
+### Entry Pages
+
+Pages where visitors land first:
+
+| Column | Description |
+|--------|-------------|
+| Page | URL path |
+| Visitors | Unique visitors entering |
+| Bounce Rate | % leaving from this page |
+| Conversion Rate | % converting after entering |
+
+### Exit Pages
+
+Pages where visitors leave:
+
+| Column | Description |
+|--------|-------------|
+| Page | URL path |
+| Exits | Number of session exits |
+| Exit Rate | Exits / Pageviews |
+
+### All Pages
+
+All pages viewed, sorted by pageviews:
+
+- Path
+- Pageviews
+- Unique pageviews
+- Avg. time on page
+
+---
+
+## Geography
+
+### Countries
+
+Top countries by visitor count:
+
+| Column | Description |
+|--------|-------------|
+| Country | Country name + flag |
+| Visitors | Unique visitors |
+| % of Total | Share of traffic |
+| Conversions | Conversion count |
+
+### Regions & Cities
+
+Drill down into specific regions and cities for top countries.
+
+<Callout>
+  Geographic data comes from IP geolocation, which is accurate to the city level in most cases.
+</Callout>
+
+---
+
+## Technology
+
+### Devices
+
+| Device | Description |
+|--------|-------------|
+| Desktop | Traditional computers |
+| Mobile | Phones |
+| Tablet | iPads, tablets |
+
+### Browsers
+
+Top browsers:
+- Chrome
+- Safari
+- Firefox
+- Edge
+- Other
+
+### Operating Systems
+
+Top OS:
+- Windows
+- macOS
+- iOS
+- Android
+- Linux
+
+---
+
+## Bot Analytics
+
+Convultra tracks and categorizes bot traffic separately:
+
+### Bot Breakdown
+
+**Analytics → Bots**
+
+| Category | Examples | Purpose |
+|----------|----------|---------|
+| Search Bots | Googlebot, Bingbot | SEO crawling |
+| AI Crawlers | ChatGPT-User, Anthropic-AI | AI training |
+| Monitoring | Uptime Robot | Availability checks |
+| Other | Various | Scrapers, tools |
+
+### AI Bot Tracking
+
+See which AI platforms are crawling your site:
+
+| Metric | Description |
+|--------|-------------|
+| Total AI Bot Hits | Combined AI crawler requests |
+| By Platform | ChatGPT, Claude, Perplexity breakdown |
+| By Page | Which pages AI is indexing |
+| Trend | AI crawling over time |
+
+---
+
+## Real-Time View
+
+Toggle **"Real-time"** to see:
+- Active visitors (last 5 minutes)
+- Current page views
+- Recent conversions
+
+---
+
+## Exports
+
+Export analytics data:
+
+1. Select time range
+2. Choose section (e.g., Traffic Sources)
+3. Click **Export** → CSV
+
+---
+
+## Privacy
+
+Convultra analytics are privacy-friendly:
+
+- ✅ No cookies for analytics
+- ✅ Session-based, not cross-site
+- ✅ No personal data stored
+- ✅ IP addresses not logged
+- ✅ GDPR/CCPA compliant
+
+<Callout>
+  Convultra does not require cookie consent banners for basic analytics.
+</Callout>
+
+---
+
+## Next Steps
+
+- [Conversions →](/dashboard/conversions)
+- [Bot Detection →](/advanced/bot-detection)
+- [AI Referrals →](/advanced/ai-referrals)
+

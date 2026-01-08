@@ -1,0 +1,327 @@
+import { Callout, Steps } from 'nextra/components'
+
+# Meta (Facebook) Ads Integration
+
+Send conversions to Meta via the Conversions API (CAPI) with Advanced Matching.
+
+## Prerequisites
+
+- Facebook Business Manager account
+- Admin access to your Pixel
+- Facebook Ads account with active campaigns
+
+---
+
+## Setup
+
+<Steps>
+### Connect Your Account
+
+1. Go to **Dashboard → Integrations**
+2. Click **Connect Meta Ads**
+3. Sign in with your Facebook account
+4. Grant Convultra access to your Business Manager
+
+### Select Pixel
+
+Choose the Facebook Pixel that should receive conversions.
+
+### Configure Events
+
+Map Convultra events to Facebook standard events:
+
+| Convultra Event | Facebook Standard Event |
+|-----------------|------------------------|
+| `purchase` | `Purchase` |
+| `lead` | `Lead` |
+| `signup` | `CompleteRegistration` |
+| `add_to_cart` | `AddToCart` |
+| `pageview` | `PageView` |
+
+### Test the Integration
+
+Use the Test Center or Facebook's Events Manager Test Events feature.
+</Steps>
+
+---
+
+## Conversions API (CAPI)
+
+Meta's Conversions API is a server-to-server integration that:
+
+- ✅ Bypasses ad blockers
+- ✅ Provides redundant tracking alongside the Pixel
+- ✅ Supports Advanced Matching for better attribution
+- ✅ Works with iOS 14.5+ App Tracking Transparency
+
+### Event Structure
+
+```javascript
+// What Convultra sends to Meta
+{
+  event_name: 'Purchase',
+  event_time: 1704067200,
+  event_source_url: 'https://yoursite.com/thank-you',
+  action_source: 'website',
+  
+  user_data: {
+    em: ['sha256_email_hash'],           // Hashed email
+    ph: ['sha256_phone_hash'],           // Hashed phone
+    fn: ['sha256_first_name'],           // Hashed first name
+    ln: ['sha256_last_name'],            // Hashed last name
+    fbc: 'fb.1.1704067200.IwAR3x...',   // Facebook click cookie
+    fbp: 'fb.1.1704067200.1234567890'   // Facebook browser cookie
+  },
+  
+  custom_data: {
+    value: 99.99,
+    currency: 'USD',
+    order_id: 'ORDER-12345',
+    content_ids: ['PROD-001'],
+    content_type: 'product',
+    num_items: 1
+  }
+}
+```
+
+---
+
+## Facebook Cookies
+
+The SDK automatically captures Meta's browser cookies:
+
+| Cookie | Purpose | Captured |
+|--------|---------|----------|
+| `_fbc` | Click ID cookie (contains fbclid) | ✅ Automatic |
+| `_fbp` | Browser ID (unique visitor) | ✅ Automatic |
+| `fbclid` | URL parameter from ad click | ✅ Automatic |
+
+These cookies are critical for attribution:
+
+```javascript
+// SDK captures automatically
+{
+  fbc: 'fb.1.1704067200.IwAR3x9kPqN7...',  // From _fbc cookie
+  fbp: 'fb.1.1704067200.1234567890',        // From _fbp cookie
+  fbclid: 'IwAR3x9kPqN7...'                 // From URL
+}
+```
+
+---
+
+## Advanced Matching
+
+Advanced Matching uses hashed customer data to match conversions:
+
+### Enable in SDK
+
+```javascript copy
+// Include user data for better matching
+Convultra.trackConversion('purchase',
+  {
+    orderId: 'ORDER-12345',
+    value: 99.99,
+    currency: 'USD',
+    content_ids: ['PROD-001']
+  },
+  {
+    email: 'customer@example.com',
+    phone: '+1234567890',
+    firstName: 'John',
+    lastName: 'Doe',
+    city: 'New York',
+    state: 'NY',
+    postalCode: '10001',
+    country: 'US'
+  }
+)
+```
+
+### Match Rate Impact
+
+| Data Provided | Match Rate |
+|---------------|------------|
+| FBC/FBP cookies only | 40-60% |
+| + Email | 60-75% |
+| + Email + Phone | 75-85% |
+| + All user data | 85-95% |
+
+---
+
+## Event Deduplication
+
+Meta uses `event_id` and `order_id` for deduplication:
+
+```javascript
+// Convultra sends
+{
+  event_id: 'evt_1704067200000_abc123',  // Unique event ID
+  custom_data: {
+    order_id: 'ORDER-12345'              // Your order ID
+  }
+}
+```
+
+This prevents double-counting if:
+- User has both Pixel and CAPI enabled
+- Page is refreshed after purchase
+- Event is accidentally sent twice
+
+---
+
+## iOS 14.5+ Tracking
+
+CAPI is essential for iOS 14.5+ users who opt out of tracking:
+
+| Scenario | Pixel Only | With CAPI |
+|----------|------------|-----------|
+| iOS opt-out | ❌ Lost | ✅ Captured |
+| Ad blocker | ❌ Lost | ✅ Captured |
+| Safari ITP | ⚠️ Limited | ✅ Full |
+
+<Callout>
+  CAPI is not a workaround for privacy choices. It respects user consent while capturing conversions that would otherwise be lost to technical limitations.
+</Callout>
+
+---
+
+## Monitoring
+
+### Events Manager
+
+Check your events in Facebook Events Manager:
+
+1. Go to **Events Manager**
+2. Select your Pixel
+3. Click **Test Events** (for testing) or **Overview**
+
+Event sources:
+- **Browser** - From Facebook Pixel
+- **Server** - From Convultra (CAPI)
+
+### Event Match Quality
+
+Meta provides an Event Match Quality score (1-10):
+
+- **1-3**: Poor matching, need more data
+- **4-6**: Fair matching, room for improvement
+- **7-10**: Good matching, optimal performance
+
+Improve by adding more user data fields.
+
+### Convultra Logs
+
+**Dashboard → Integrations → Meta Ads → View Logs**
+
+---
+
+## Troubleshooting
+
+### "Invalid access token"
+
+**Cause**: Token expired or permissions revoked.
+
+**Solution**: Reconnect the integration with fresh OAuth.
+
+### "Pixel not found"
+
+**Cause**: Pixel ID mismatch or pixel deleted.
+
+**Solution**: Re-select pixel in integration settings.
+
+### Low Event Match Quality
+
+**Cause**: Missing user data or cookies.
+
+**Solutions**:
+1. Add email/phone to conversion calls
+2. Ensure Facebook Pixel is installed (creates fbc/fbp cookies)
+3. Add more user data fields (name, address)
+
+### Events Not Appearing
+
+**Cause**: Various
+
+**Checklist**:
+1. Check Convultra logs for errors
+2. Check Events Manager for delayed events (up to 20 min)
+3. Verify pixel ID is correct
+4. Test with Test Events feature
+
+---
+
+## E-Commerce Data
+
+For e-commerce, include product data:
+
+```javascript copy
+Convultra.trackPurchase({
+  orderId: 'ORDER-12345',
+  value: 149.99,
+  currency: 'USD',
+  items: [
+    {
+      sku: 'PROD-001',
+      name: 'Widget Pro',
+      price: 99.99,
+      quantity: 1
+    },
+    {
+      sku: 'PROD-002',
+      name: 'Widget Case',
+      price: 50.00,
+      quantity: 1
+    }
+  ]
+})
+
+// Convultra sends to Meta
+{
+  content_ids: ['PROD-001', 'PROD-002'],
+  content_type: 'product',
+  num_items: 2,
+  value: 149.99,
+  currency: 'USD'
+}
+```
+
+---
+
+## Best Practices
+
+### 1. Install Facebook Pixel
+
+Even with CAPI, keep the Pixel installed for:
+- FBC/FBP cookie generation
+- Client-side event backup
+- Retargeting audiences
+
+### 2. Use External IDs
+
+For customer matching across sessions:
+
+```javascript
+Convultra.identify('customer_12345', {
+  email: 'customer@example.com'
+})
+```
+
+### 3. Include Order IDs
+
+Always include order IDs for deduplication:
+
+```javascript
+Convultra.trackPurchase({
+  orderId: 'ORDER-12345', // Required!
+  value: 99.99
+})
+```
+
+---
+
+## Next Steps
+
+- [Microsoft Ads Integration →](/integrations/microsoft-ads)
+- [Enhanced Conversions →](/sdk/enhanced-conversions)
+- [Deduplication →](/advanced/deduplication)
+

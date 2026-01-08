@@ -1,0 +1,288 @@
+import { Callout, Steps } from 'nextra/components'
+
+# Cross-Domain Tracking
+
+Track users seamlessly across multiple domains without losing session or attribution data.
+
+## When You Need Cross-Domain
+
+Cross-domain tracking is needed when:
+- Checkout is on a different domain
+- You use subdomains with separate tracking
+- You have multiple properties that share users
+
+```
+yoursite.com → checkout.yoursite.com
+     ↓
+Without cross-domain: New session, lost attribution
+With cross-domain: Same session, preserved attribution
+```
+
+---
+
+## How It Works
+
+Convultra uses a `_cvl` URL parameter to transfer session data:
+
+```
+1. User on site-a.com
+         ↓
+2. Clicks link to site-b.com
+         ↓
+3. Convultra appends ?_cvl=<encoded-data>
+         ↓
+4. site-b.com SDK reads _cvl parameter
+         ↓
+5. Session and attribution continue seamlessly
+```
+
+The `_cvl` parameter contains:
+- Session ID
+- Click IDs (gclid, fbclid, etc.)
+- User ID (if identified)
+- UTM parameters
+
+---
+
+## Setup
+
+<Steps>
+### Configure Domains
+
+In your SDK initialization, specify all domains:
+
+```javascript
+Convultra.init({
+  apiKey: 'your-key',
+  endpoint: 'https://your-endpoint.com',
+  crossDomainDomains: [
+    'yoursite.com',
+    'checkout.yoursite.com',
+    'shop.yourbrand.com'
+  ]
+})
+```
+
+### Automatic Link Decoration
+
+The SDK automatically adds `_cvl` to links pointing to configured domains:
+
+```html
+<!-- Before click -->
+<a href="https://checkout.yoursite.com/cart">Checkout</a>
+
+<!-- After SDK processes -->
+<a href="https://checkout.yoursite.com/cart?_cvl=eyJzZXNzaW9uSWQiOi...">Checkout</a>
+```
+
+### Install SDK on All Domains
+
+Ensure the SDK is installed on every domain in the list.
+</Steps>
+
+---
+
+## Data Attributes Configuration
+
+```html
+<script
+  src="https://cdn.convultra.com/ultra.min.js"
+  data-convultra-api-key="your-key"
+  data-convultra-endpoint="https://your-endpoint.com"
+  data-convultra-cross-domain-domains="yoursite.com,checkout.yoursite.com"
+></script>
+```
+
+---
+
+## Manual Link Decoration
+
+For dynamically created links:
+
+```javascript
+// Get decorated URL
+const url = Convultra.getCrossdomainLink('https://checkout.yoursite.com/cart')
+
+// Result: https://checkout.yoursite.com/cart?_cvl=eyJz...
+```
+
+For JavaScript navigation:
+
+```javascript
+document.getElementById('checkout-btn').addEventListener('click', () => {
+  const targetUrl = 'https://checkout.yoursite.com/cart'
+  window.location.href = Convultra.getCrossdomainLink(targetUrl)
+})
+```
+
+---
+
+## Form Submissions
+
+For forms that submit to another domain:
+
+```html
+<form id="checkout-form" action="https://checkout.yoursite.com/process">
+  <!-- Form fields -->
+</form>
+
+<script>
+document.getElementById('checkout-form').addEventListener('submit', (e) => {
+  const form = e.target
+  
+  // Add hidden field with cross-domain data
+  const cvlInput = document.createElement('input')
+  cvlInput.type = 'hidden'
+  cvlInput.name = '_cvl'
+  cvlInput.value = Convultra.getCrossdomainData() // Gets the encoded data
+  form.appendChild(cvlInput)
+})
+</script>
+```
+
+---
+
+## What's Transferred
+
+| Data | Transferred | Purpose |
+|------|-------------|---------|
+| Session ID | ✅ | Maintain session continuity |
+| gclid | ✅ | Google Ads attribution |
+| fbclid | ✅ | Meta Ads attribution |
+| msclkid | ✅ | Microsoft Ads attribution |
+| ttclid | ✅ | TikTok attribution |
+| twclid | ✅ | Twitter attribution |
+| UTM params | ✅ | Campaign tracking |
+| User ID | ✅ | Identified user tracking |
+| Referrer | ✅ | Traffic source |
+
+---
+
+## Security
+
+### Data Encoding
+
+Cross-domain data is:
+- Base64 encoded
+- Time-limited (expires in 5 minutes)
+- Non-sensitive (no PII)
+
+### Validation
+
+The receiving SDK validates:
+- Timestamp is within window
+- Domain is in allowed list
+- Data structure is valid
+
+---
+
+## Common Scenarios
+
+### Main Site to Checkout
+
+```javascript
+// Main site: yoursite.com
+Convultra.init({
+  crossDomainDomains: ['yoursite.com', 'checkout.yoursite.com']
+})
+
+// Checkout domain automatically receives session
+```
+
+### Multiple Brand Sites
+
+```javascript
+// Shared config across all brand sites
+Convultra.init({
+  crossDomainDomains: [
+    'brand-a.com',
+    'brand-b.com',
+    'shop.example.com'
+  ]
+})
+```
+
+### Subdomains
+
+```javascript
+// Include all subdomains
+Convultra.init({
+  crossDomainDomains: [
+    'example.com',
+    'www.example.com',
+    'shop.example.com',
+    'checkout.example.com'
+  ]
+})
+```
+
+---
+
+## Troubleshooting
+
+### Session Not Continuing
+
+1. **Check domain list** - Is target domain in `crossDomainDomains`?
+2. **Check SDK on both domains** - Is it installed and initialized?
+3. **Check `_cvl` parameter** - Is it in the URL?
+4. **Check expiry** - Did user wait too long (>5 min)?
+
+### Debug Mode
+
+```javascript
+Convultra.debug(true)
+// Look for cross-domain logs in console
+```
+
+### Verify Data Transfer
+
+On the target domain:
+
+```javascript
+// Check if cross-domain data was received
+console.log(Convultra.getSessionId())
+console.log(Convultra.getClickIds())
+```
+
+---
+
+## Limitations
+
+| Limitation | Details |
+|------------|---------|
+| Link decoration only | Doesn't work for direct URL entry |
+| 5-minute expiry | User must click within 5 minutes |
+| JavaScript required | Needs SDK on both domains |
+| Public data only | Doesn't transfer sensitive user data |
+
+---
+
+## Alternative: Server-Side
+
+For more control, use server-side session linking:
+
+```javascript
+// On first domain - get session
+const sessionId = Convultra.getSessionId()
+const clickIds = Convultra.getClickIds()
+
+// Pass to your server
+await fetch('/api/create-checkout', {
+  body: JSON.stringify({ sessionId, clickIds })
+})
+
+// On second domain - restore session
+Convultra.init({ ... })
+Convultra.restoreSession({
+  sessionId: sessionFromServer,
+  clickIds: clickIdsFromServer
+})
+```
+
+---
+
+## Next Steps
+
+- [Bot Detection →](/advanced/bot-detection)
+- [Attribution Models →](/advanced/attribution-models)
+

@@ -1,0 +1,390 @@
+import { Callout, Steps } from 'nextra/components'
+
+# Common Issues
+
+Solutions to the most frequently encountered problems.
+
+## SDK Not Loading
+
+### Symptoms
+- No events in dashboard
+- `Convultra` is undefined in console
+- No network requests to endpoint
+
+### Solutions
+
+<Steps>
+### Check Script Inclusion
+
+Verify the script tag is in your HTML:
+
+```html
+<script src="https://cdn.convultra.com/ultra.min.js"></script>
+```
+
+Or if self-hosting:
+
+```html
+<script src="/path/to/ultra.min.js"></script>
+```
+
+### Check Initialization
+
+Ensure you're calling `init()`:
+
+```javascript
+Convultra.init({
+  apiKey: 'your-api-key',
+  endpoint: 'https://your-endpoint.com'
+})
+```
+
+### Check Console Errors
+
+Look for JavaScript errors that may prevent loading:
+- Syntax errors
+- CORS errors
+- Network errors
+
+### Check Ad Blocker
+
+Temporarily disable ad blockers to test. Some blockers block analytics scripts.
+</Steps>
+
+---
+
+## Events Not Appearing in Dashboard
+
+### Symptoms
+- SDK loads, but no data in dashboard
+- Tracking calls return successfully
+
+### Solutions
+
+<Steps>
+### Verify API Key
+
+Ensure the API key matches your project:
+
+```javascript
+// Check in console
+console.log(Convultra.getConfig().apiKey)
+```
+
+### Check Endpoint
+
+Verify the endpoint URL is correct:
+
+```javascript
+console.log(Convultra.getConfig().endpoint)
+```
+
+### Check Network Requests
+
+In browser DevTools → Network:
+1. Filter by "track" or your endpoint domain
+2. Check request is successful (200 status)
+3. Check response for errors
+
+### Check Project Filter
+
+In dashboard, ensure:
+- Correct project selected
+- Time range includes recent events
+- "Include bots" toggle if testing
+</Steps>
+
+---
+
+## Click IDs Not Being Captured
+
+### Symptoms
+- Conversions showing "No click ID"
+- Low match rates in platform reporting
+
+### Solutions
+
+<Steps>
+### Check Auto-Tagging
+
+Ensure auto-tagging is enabled in ad platforms:
+- **Google Ads**: Account Settings → Auto-tagging
+- **Microsoft Ads**: Account Settings → URL options
+
+### Check Landing Page URLs
+
+Verify click IDs are in URLs:
+
+```
+✅ https://yoursite.com/?gclid=Cj0KCQ...
+❌ https://yoursite.com/
+```
+
+### Check SDK on Landing Pages
+
+The SDK must be on the first page user lands on to capture click IDs.
+
+### Check LocalStorage
+
+Verify click IDs are being stored:
+
+```javascript
+localStorage.getItem('_cu_gclid')
+localStorage.getItem('_cu_fbclid')
+```
+
+### Check UTM Stripping
+
+Some systems strip URL parameters. Check:
+- Redirects
+- CMS/framework URL handling
+- Server-side processing
+</Steps>
+
+---
+
+## Conversions Not Forwarding to Platforms
+
+### Symptoms
+- Conversions in Convultra dashboard
+- Not appearing in Google Ads/Meta/etc.
+
+### Solutions
+
+<Steps>
+### Check Integration Status
+
+**Dashboard → Integrations**
+
+Verify the platform connection is:
+- ✅ Connected
+- ✅ Active (not expired)
+
+### Check Event Mapping
+
+Ensure your event type is mapped:
+
+| Convultra Event | Platform Action |
+|-----------------|-----------------|
+| `purchase` | Mapped? |
+| `lead` | Mapped? |
+
+### Check Forwarding Logs
+
+**Integrations → [Platform] → View Logs**
+
+Look for:
+- Error messages
+- Failed requests
+- Retry attempts
+
+### Check Click ID Presence
+
+Conversions need click IDs for attribution:
+
+```javascript
+// Verify click IDs exist
+Convultra.getClickIds()
+```
+
+### Re-authorize Integration
+
+Token may have expired:
+1. Disconnect integration
+2. Reconnect with fresh OAuth
+</Steps>
+
+---
+
+## High Bounce Rate / Low Duration
+
+### Symptoms
+- Bounce rate >80 percent
+- Average duration under 10 seconds
+
+### Solutions
+
+<Steps>
+### Check for Single-Page Apps
+
+SPAs need manual page tracking:
+
+```javascript
+// On route change
+Convultra.page()
+```
+
+### Check for Quick Exits
+
+Users may be leaving immediately. Check:
+- Page load time
+- Content above the fold
+- Mobile experience
+
+### Filter Bot Traffic
+
+Bots inflate bounce rates. Enable bot filtering:
+
+**Dashboard → Toggle off "Include Bots"**
+
+### Check Session Duration
+
+Default session timeout is 30 minutes. Adjust if needed:
+
+**Settings → Session Timeout**
+</Steps>
+
+---
+
+## Duplicate Conversions
+
+### Symptoms
+- Same order appearing multiple times
+- Inflated conversion counts
+
+### Solutions
+
+<Steps>
+### Check Order ID
+
+Always include unique order IDs:
+
+```javascript
+// ✅ Good
+Convultra.trackPurchase({
+  orderId: 'ORD-12345-unique',
+  value: 99.99
+})
+
+// ❌ Bad
+Convultra.trackPurchase({
+  value: 99.99
+})
+```
+
+### Check for Page Reloads
+
+Thank you page reloads can fire events multiple times. Solutions:
+- Use one-time session flag
+- Check URL for already-tracked indicator
+- Use server-side tracking
+
+```javascript
+// One-time flag example
+if (!sessionStorage.getItem('order_tracked')) {
+  Convultra.trackPurchase({ orderId: '...' })
+  sessionStorage.setItem('order_tracked', 'true')
+}
+```
+
+### Check for Multiple SDK Instances
+
+Ensure script isn't included twice on the page.
+
+### Check Deduplication Windows
+
+Adjust windows if legitimate events are outside default timeframes:
+
+**Settings → Deduplication**
+</Steps>
+
+---
+
+## Cross-Domain Not Working
+
+### Symptoms
+- New session on second domain
+- Lost attribution data
+
+### Solutions
+
+<Steps>
+### Check Domain Configuration
+
+Both domains must be in the config:
+
+```javascript
+Convultra.init({
+  crossDomainDomains: ['site-a.com', 'site-b.com']
+})
+```
+
+### Check SDK on Both Domains
+
+SDK must be installed and initialized on both domains.
+
+### Check Link Decoration
+
+Verify `_cvl` parameter is added to links:
+
+```html
+<!-- Should become -->
+<a href="https://site-b.com?_cvl=eyJz...">Link</a>
+```
+
+### Check for URL Stripping
+
+Some systems strip unknown parameters. Check:
+- Server redirects
+- CMS settings
+- Security plugins
+</Steps>
+
+---
+
+## Enhanced Conversions Not Matching
+
+### Symptoms
+- Low Event Match Quality in Meta
+- Enhanced Conversions Diagnostics issues in Google
+
+### Solutions
+
+<Steps>
+### Check Data Format
+
+Ensure proper formatting:
+
+```javascript
+// ✅ Good
+{
+  email: 'user@example.com',    // Lowercase, trimmed
+  phone: '+14155551234',        // E.164 format
+  firstName: 'John',            // Capitalized
+  lastName: 'Doe'
+}
+
+// ❌ Bad
+{
+  email: '  USER@Example.COM ',  // Not normalized
+  phone: '(415) 555-1234',       // Wrong format
+  firstName: 'john',
+  lastName: 'DOE'
+}
+```
+
+### Provide More Data
+
+More fields = better matching:
+
+| Fields | Expected Match Rate |
+|--------|-------------------|
+| Email only | 60-70 percent |
+| + Phone | 75-85 percent |
+| + Name | 85-92 percent |
+| + Address | 90-95 percent |
+
+### Check Platform Diagnostics
+
+- **Google**: Conversions → [Action] → Diagnostics
+- **Meta**: Events Manager → Data Sources → Event Match Quality
+</Steps>
+
+---
+
+## Next Steps
+
+- [Debugging →](/troubleshooting/debugging)
+- [FAQ →](/troubleshooting/faq)
+- [Test Center →](/dashboard/test-center)
+

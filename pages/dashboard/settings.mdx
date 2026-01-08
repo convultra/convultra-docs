@@ -1,0 +1,220 @@
+import { Callout, Steps } from 'nextra/components'
+
+# Settings
+
+Configure your project settings and preferences.
+
+## Project Settings
+
+### General
+
+| Setting | Description |
+|---------|-------------|
+| **Project Name** | Display name for the project |
+| **Domain** | Primary domain for this project |
+| **Timezone** | Timezone for reporting |
+| **Currency** | Default currency for values |
+
+### API Keys
+
+Each project has:
+
+| Key Type | Usage |
+|----------|-------|
+| **API Key** | SDK initialization (`apiKey` parameter) |
+| **Server Key** | Server-side API calls (keep secret!) |
+
+<Callout type="error">
+  Never expose your Server Key in client-side code.
+</Callout>
+
+### Regenerate Keys
+
+To regenerate an API key:
+
+1. Go to **Settings → API Keys**
+2. Click **Regenerate** next to the key
+3. Update your SDK configuration with the new key
+
+---
+
+## Tracking Settings
+
+### Auto-Track Options
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| **Page Views** | ✅ On | Automatically track page views |
+| **Click IDs** | ✅ On | Capture gclid, fbclid, etc. |
+| **Referrer** | ✅ On | Track referring sources |
+| **UTM Parameters** | ✅ On | Capture UTM tags |
+
+### Session Settings
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| **Session Timeout** | 30 min | Inactivity before new session |
+| **Cross-Domain** | ❌ Off | Enable cross-domain tracking |
+| **Cross-Domain Domains** | - | List of domains to link |
+
+### Deduplication
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| **Order ID Dedup** | ✅ On | Dedupe by orderId (24h window) |
+| **Event ID Dedup** | ✅ On | Dedupe by eventId (5min window) |
+| **Click ID Dedup** | ✅ On | Dedupe by click ID (1h window) |
+| **Fingerprint Dedup** | ✅ On | Dedupe by fingerprint (5min window) |
+
+### Deduplication Time Windows
+
+Customize deduplication windows:
+
+| Window | Default | Min | Max |
+|--------|---------|-----|-----|
+| Conversion ID | 24 hours | 1 hour | 7 days |
+| Event ID | 5 minutes | 1 minute | 1 hour |
+| Click ID | 1 hour | 5 minutes | 24 hours |
+| Fingerprint | 5 minutes | 1 minute | 1 hour |
+
+---
+
+## Privacy Settings
+
+### Do Not Track
+
+| Option | Description |
+|--------|-------------|
+| **Respect DNT** | Honor browser DNT setting |
+| **Respect GPC** | Honor Global Privacy Control |
+
+### Data Retention
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| **Event Retention** | 2 years | How long to keep events |
+| **Session Retention** | 90 days | How long to keep sessions |
+
+### Cookie Settings
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| **Cookie Domain** | Auto | Domain for cookies |
+| **Cookie Secure** | ✅ On | HTTPS only cookies |
+| **Cookie SameSite** | Lax | SameSite attribute |
+
+---
+
+## Integrations
+
+### Connected Platforms
+
+View and manage connected ad platforms:
+
+| Platform | Status | Actions |
+|----------|--------|---------|
+| Google Ads | ✅ Connected | Disconnect, View Logs |
+| Meta Ads | ✅ Connected | Disconnect, View Logs |
+| Microsoft Ads | ❌ Not Connected | Connect |
+
+### Webhooks
+
+Send events to custom endpoints:
+
+<Steps>
+### Add Webhook
+
+Click **Add Webhook**
+
+### Configure
+
+- **URL**: Your endpoint URL
+- **Events**: Which events to send
+- **Secret**: HMAC signing secret
+
+### Test
+
+Click **Send Test Event** to verify
+</Steps>
+
+Webhook payload:
+
+```json
+{
+  "event_type": "purchase",
+  "timestamp": "2024-01-15T14:30:45Z",
+  "data": {
+    "value": 99.99,
+    "currency": "USD",
+    "orderId": "ORD-12345"
+  },
+  "signature": "sha256=..."
+}
+```
+
+---
+
+## Team & Permissions
+
+### Invite Team Members
+
+1. Go to **Settings → Team**
+2. Click **Invite**
+3. Enter email address
+4. Select role
+
+### Roles
+
+| Role | Permissions |
+|------|-------------|
+| **Owner** | Full access, billing, delete project |
+| **Admin** | Full access except billing |
+| **Member** | View analytics, no settings access |
+| **Viewer** | Read-only access |
+
+---
+
+## Billing
+
+### Plans
+
+| Plan | Events/Month | Price |
+|------|--------------|-------|
+| Free | 10,000 | $0 |
+| Starter | 100,000 | $29 |
+| Pro | 1,000,000 | $99 |
+| Enterprise | Unlimited | Custom |
+
+### Usage
+
+View current usage:
+- Events this month
+- Events remaining
+- Projected usage
+
+### Billing History
+
+Download invoices and view payment history.
+
+---
+
+## Danger Zone
+
+### Delete Project
+
+<Callout type="error">
+  This permanently deletes all data and cannot be undone.
+</Callout>
+
+1. Go to **Settings → Danger Zone**
+2. Click **Delete Project**
+3. Type project name to confirm
+4. Click **Delete Forever**
+
+---
+
+## Next Steps
+
+- [API Reference →](/api-reference)
+- [Troubleshooting →](/troubleshooting)
+

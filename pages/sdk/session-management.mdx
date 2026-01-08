@@ -1,0 +1,363 @@
+import { Callout } from 'nextra/components'
+
+# Session Management
+
+Convultra manages user sessions automatically, tracking visitor journeys across pages and visits.
+
+## Session Lifecycle
+
+```
+User arrives → New session created
+     ↓
+Browses pages → Session activity updated
+     ↓
+30 min inactivity → Session ends
+     ↓
+User returns → New session (or restored if within 30 min)
+```
+
+---
+
+## Session Structure
+
+Each session contains:
+
+```javascript
+{
+  // Identification
+  id: 'ses_1704067200000_abc123xyz',
+  fingerprint: 'fp_8a7b3c2d1e',
+  
+  // Timing
+  startTime: 1704067200000,
+  lastActivity: 1704068100000,
+  
+  // Activity
+  pageViews: 5,
+  events: 12,
+  
+  // Attribution
+  landingPage: 'https://yoursite.com/pricing?gclid=...',
+  referrer: 'https://google.com',
+  gclid: 'Cj0KCQjw...',
+  fbclid: null,
+  msclkid: null,
+  urlParams: {
+    utm_source: 'google',
+    utm_medium: 'cpc',
+    utm_campaign: 'summer-sale'
+  },
+  
+  // Analytics (when analytics mode enabled)
+  entryPage: '/pricing',
+  exitPage: '/checkout',
+  bounced: false,
+  totalDuration: 900000, // 15 minutes in ms
+  engagementEvents: 8,
+  maxScrollDepth: 75
+}
+```
+
+---
+
+## Session Timeout
+
+Default session timeout is **30 minutes of inactivity**:
+
+```javascript
+// Session timeline
+12:00:00 - User lands (session starts)
+12:05:00 - Views pricing page (activity updated)
+12:15:00 - Views features page (activity updated)
+12:45:01 - 30 min since last activity (session ends)
+
+// User returns at 12:50:00
+12:50:00 - New session starts (different session ID)
+```
+
+<Callout>
+  Session timeout matches Google Analytics behavior (30 minutes) for consistent session counting.
+</Callout>
+
+---
+
+## Session Storage
+
+Sessions are stored in **localStorage** for persistence:
+
+| Key | Content | Expiry |
+|-----|---------|--------|
+| `cvl_session` | Current session data | 30 min inactivity |
+
+This means:
+- ✅ Sessions survive page refreshes
+- ✅ Sessions survive browser back/forward
+- ✅ Sessions survive closing and reopening tabs
+- ❌ Sessions don't survive clearing browser data
+
+---
+
+## Accessing Session Data
+
+### Get Current Session
+
+```javascript copy
+const session = Convultra.getSession()
+
+console.log(session.id)         // 'ses_1704067200000_abc123xyz'
+console.log(session.pageViews)  // 5
+console.log(session.gclid)      // 'Cj0KCQjw...'
+console.log(session.referrer)   // 'https://google.com'
+```
+
+### Check Session Status
+
+```javascript copy
+if (Convultra.initialized) {
+  const session = Convultra.getSession()
+  
+  if (session) {
+    console.log('Active session:', session.id)
+    console.log('Pages viewed:', session.pageViews)
+    console.log('Session duration:', Date.now() - session.startTime, 'ms')
+  } else {
+    console.log('No active session')
+  }
+}
+```
+
+---
+
+## Session Analytics
+
+When `analytics: true` (default), sessions include engagement data:
+
+### Bounce Rate
+
+Uses Plausible-style calculation:
+
+```javascript
+// Bounced = single page view AND no interactive events
+bounced: true   // One page, no clicks/scrolls
+bounced: false  // Multiple pages OR any interaction
+bounced: null   // Not yet determined
+```
+
+### Engagement Events
+
+Counts user interactions:
+
+```javascript
+engagementEvents: 8  // Clicks, form interactions, scroll events
+```
+
+### Scroll Depth
+
+Maximum scroll percentage reached:
+
+```javascript
+maxScrollDepth: 75  // User scrolled 75% down the page
+```
+
+### Session Duration
+
+```javascript
+// Session timing
+startTime: 1704067200000        // When session started
+lastActivity: 1704068100000     // Last interaction
+totalDuration: 900000           // Total active time (ms)
+```
+
+---
+
+## Session Restoration
+
+Sessions are restored when users return within the timeout:
+
+### Scenario: Same Tab
+
+```javascript
+// User at 12:00
+Session: ses_abc, pageViews: 3
+
+// User refreshes at 12:05
+Session: ses_abc, pageViews: 4  // Same session, incremented
+
+// User returns at 12:40 (within 30 min)
+Session: ses_abc, pageViews: 5  // Same session, continued
+```
+
+### Scenario: New Tab
+
+```javascript
+// Tab 1: Session ses_abc at 12:00
+// Tab 2: Opens at 12:05
+
+// Both tabs share the same session (via localStorage)
+Session: ses_abc, pageViews: shared
+```
+
+### Scenario: Session Expired
+
+```javascript
+// Session at 12:00
+Session: ses_abc
+
+// User returns at 13:00 (>30 min)
+Session: ses_xyz  // New session created
+// But: click_history still contains original click IDs!
+```
+
+---
+
+## Cross-Domain Sessions
+
+Sessions can be shared across domains using the linker parameter:
+
+```html
+<!-- On domain-a.com -->
+<script
+  src="https://cdn.convultra.com/ultra.min.js"
+  data-convultra-key="proj_xxx"
+  data-cross-domain="domain-b.com"
+></script>
+```
+
+When a user clicks a link to `domain-b.com`:
+
+```
+// Link automatically decorated
+domain-b.com/page?_cvl=eyJzaWQiOiJzZXNfYWJj...
+
+// On domain-b.com, session is restored
+Session: ses_abc (same ID from domain-a.com)
+```
+
+Data preserved across domains:
+- Session ID
+- Page views count
+- Landing page and referrer
+- Click IDs (gclid, fbclid, etc.)
+- UTM parameters
+
+---
+
+## Manual Session Control
+
+### Manually Decorate URLs
+
+```javascript copy
+// Get a URL with session data for cross-domain
+const decoratedUrl = Convultra.getCrossDomainUrl('https://checkout.example.com/cart')
+// Returns: https://checkout.example.com/cart?_cvl=eyJz...
+```
+
+### Reset Session
+
+```javascript copy
+// Clear all tracking data (for logout or testing)
+Convultra.reset()
+// Creates a new session on next page load
+```
+
+---
+
+## Session ID Format
+
+Session IDs follow a predictable format:
+
+```
+ses_[timestamp]_[random]
+
+Examples:
+ses_1704067200000_abc123xyz
+ses_1704153600000_def456uvw
+```
+
+This makes debugging easier:
+- Timestamp: When session started (Unix ms)
+- Random: Unique identifier within that millisecond
+
+---
+
+## Debugging Sessions
+
+### Enable Debug Mode
+
+```javascript
+Convultra.init('proj_xxx', { debug: true })
+```
+
+Console output:
+
+```
+[Convultra] 🆕 New session created: { sessionId: 'ses_123...', hasStoredSession: false }
+[Convultra] 🔄 Session restored from localStorage: { sessionId: 'ses_123...', pageViews: 3 }
+[Convultra] ⏰ Session expired: { oldSessionId: 'ses_123...', timeSinceLastActivity: '45 min' }
+[Convultra] 🔗 Session restored from cross-domain linker: { sessionId: 'ses_123...', gclid: '...' }
+```
+
+### Check localStorage
+
+Open DevTools → Application → Local Storage:
+
+```javascript
+cvl_session: {
+  id: "ses_1704067200000_abc123xyz",
+  pageViews: 5,
+  gclid: "Cj0KCQjw...",
+  ...
+}
+```
+
+---
+
+## Best Practices
+
+### 1. Don't Store Sensitive Data
+
+Session data is stored in localStorage. Avoid adding sensitive information:
+
+```javascript
+// ❌ Don't do this
+Convultra.track('event', { password: '...' })
+
+// ✅ Safe
+Convultra.track('event', { feature: 'login' })
+```
+
+### 2. Use Session for Analytics
+
+```javascript
+// Example: Show personalized content based on session
+const session = Convultra.getSession()
+
+if (session.pageViews > 5) {
+  showPromoPopup()
+}
+
+if (session.utm_campaign === 'black-friday') {
+  showBlackFridayBanner()
+}
+```
+
+### 3. Handle No Session
+
+```javascript
+const session = Convultra.getSession()
+
+if (!session) {
+  // SDK not initialized or DNT enabled
+  console.log('No tracking session available')
+  return
+}
+```
+
+---
+
+## Next Steps
+
+- [Cross-Domain Tracking →](/advanced/cross-domain-tracking)
+- [Attribution Models →](/advanced/attribution-models)
+- [Bot Detection →](/advanced/bot-detection)
+

@@ -1,0 +1,158 @@
+import { Callout, Steps } from 'nextra/components'
+
+# LinkedIn Ads Integration
+
+Send conversions to LinkedIn via the Conversions API for B2B tracking.
+
+## Prerequisites
+
+- LinkedIn Campaign Manager account
+- Admin access to your LinkedIn Page
+- Insight Tag installed (optional but recommended)
+
+---
+
+## Setup
+
+<Steps>
+### Connect Your Account
+
+1. Go to **Dashboard → Integrations**
+2. Click **Connect LinkedIn Ads**
+3. Sign in with your LinkedIn account
+4. Authorize Convultra access
+
+### Select Ad Account
+
+Choose which LinkedIn ad account should receive conversions.
+
+### Configure Conversion Events
+
+Map Convultra events to LinkedIn conversion types:
+
+| Convultra Event | LinkedIn Conversion |
+|-----------------|---------------------|
+| `lead` | Lead |
+| `signup` | Sign Up |
+| `purchase` | Purchase |
+| Custom events | Custom conversions |
+</Steps>
+
+---
+
+## Li_fat_id Attribution
+
+LinkedIn uses `li_fat_id` for first-party click attribution:
+
+```
+User clicks LinkedIn ad → https://yoursite.com/?li_fat_id=abc123...
+         ↓
+Convultra captures li_fat_id → Stores for 90 days
+         ↓
+User converts → li_fat_id included in conversion
+         ↓
+LinkedIn matches to original ad click
+```
+
+---
+
+## Enhanced Matching
+
+For B2B, email is the primary matching identifier:
+
+```javascript copy
+Convultra.trackConversion('lead',
+  {
+    leadId: 'LEAD-12345',
+    value: 500, // Lead value
+    formName: 'Demo Request'
+  },
+  {
+    email: 'prospect@company.com',  // Work email preferred
+    firstName: 'Jane',
+    lastName: 'Doe'
+  }
+)
+```
+
+<Callout>
+  LinkedIn matching works best with work email addresses since users are signed in with their professional profiles.
+</Callout>
+
+---
+
+## B2B Best Practices
+
+### Track High-Value Actions
+
+```javascript
+// Demo request (high intent)
+Convultra.trackLead({
+  leadId: 'DEMO-12345',
+  value: 1000,
+  formName: 'Book Demo'
+})
+
+// Content download (lead nurturing)
+Convultra.trackDownload({
+  downloadId: 'DL-12345',
+  fileName: 'B2B Buyers Guide',
+  category: 'lead_magnet'
+})
+
+// Trial signup (conversion)
+Convultra.trackSignup({
+  userId: 'trial_12345',
+  plan: 'enterprise_trial'
+})
+```
+
+### Use Lead Value
+
+Assign monetary values to different lead types:
+
+| Lead Type | Suggested Value |
+|-----------|----------------|
+| Newsletter signup | $10 |
+| Content download | $50 |
+| Webinar registration | $100 |
+| Demo request | $500 |
+| Trial signup | $1,000 |
+
+---
+
+## Monitoring
+
+### LinkedIn Campaign Manager
+
+1. Go to **Campaign Manager**
+2. Navigate to **Analyze** → **Conversion tracking**
+3. View conversion data
+
+### Convultra Logs
+
+**Dashboard → Integrations → LinkedIn Ads → View Logs**
+
+---
+
+## Troubleshooting
+
+### Low Match Rate
+
+B2B matching can be lower than B2C because:
+- Users may use personal email on your site
+- Work email in LinkedIn differs from site signup
+
+**Solutions**:
+1. Ask for work email in forms
+2. Use company domain matching
+3. Include li_fat_id in all landing pages
+
+---
+
+## Next Steps
+
+- [SDK Configuration →](/sdk/configuration)
+- [Enhanced Conversions →](/sdk/enhanced-conversions)
+- [Attribution Models →](/advanced/attribution-models)
+

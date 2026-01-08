@@ -1,0 +1,462 @@
+import { Callout, Tabs, Tab } from 'nextra/components'
+
+# SDK Methods
+
+Complete reference for all Convultra JavaScript SDK methods.
+
+## Initialization
+
+### `init(config)`
+
+Initializes the Convultra SDK with your project configuration.
+
+```javascript
+Convultra.init({
+  apiKey: 'your-api-key',
+  endpoint: 'https://your-endpoint.com',
+  autoTrack: true,
+  debug: false
+})
+```
+
+**Parameters:**
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `apiKey` | `string` | Required | Your project API key |
+| `endpoint` | `string` | Required | Tracking endpoint URL |
+| `autoTrack` | `boolean` | `true` | Auto-track page views |
+| `debug` | `boolean` | `false` | Enable console logging |
+| `respectDNT` | `boolean` | `false` | Honor Do Not Track |
+| `crossDomainDomains` | `string[]` | `[]` | Domains for cross-domain tracking |
+
+**Returns:** `void`
+
+---
+
+## Page Tracking
+
+### `page(properties?)`
+
+Tracks a page view event.
+
+```javascript
+// Basic page view
+Convultra.page()
+
+// With custom properties
+Convultra.page({
+  title: 'Product Page',
+  category: 'Electronics'
+})
+```
+
+**Parameters:**
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `properties` | `object` | `{}` | Custom properties |
+
+**Auto-captured properties:**
+- `url` - Current page URL
+- `referrer` - Referring page
+- `title` - Page title
+
+---
+
+## Event Tracking
+
+### `track(eventName, properties?)`
+
+Tracks a custom event.
+
+```javascript
+Convultra.track('button_click', {
+  button_id: 'signup-cta',
+  page: 'homepage'
+})
+```
+
+**Parameters:**
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `eventName` | `string` | Required | Event name |
+| `properties` | `object` | `{}` | Event properties |
+
+**Returns:** `void`
+
+---
+
+## Conversion Tracking
+
+### `trackConversion(eventType, data, userData?)`
+
+Tracks a conversion event with optional Enhanced Conversions data.
+
+```javascript
+Convultra.trackConversion('purchase',
+  {
+    orderId: 'ORD-12345',
+    value: 99.99,
+    currency: 'USD'
+  },
+  {
+    email: 'customer@example.com',
+    phone: '+1234567890'
+  }
+)
+```
+
+**Parameters:**
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `eventType` | `string` | Required | Conversion type |
+| `data` | `object` | Required | Conversion data |
+| `userData` | `object` | `{}` | User data for Enhanced Conversions |
+
+**Data properties:**
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `orderId` | `string` | Unique order/transaction ID |
+| `value` | `number` | Conversion value |
+| `currency` | `string` | ISO currency code (USD, EUR, etc.) |
+| `items` | `array` | Product items (for e-commerce) |
+
+**User data properties:**
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `email` | `string` | Customer email |
+| `phone` | `string` | Phone number (E.164 format) |
+| `firstName` | `string` | First name |
+| `lastName` | `string` | Last name |
+| `city` | `string` | City |
+| `state` | `string` | State/region |
+| `postalCode` | `string` | Postal/ZIP code |
+| `country` | `string` | Country code (US, GB, etc.) |
+
+---
+
+### `trackPurchase(data, userData?)`
+
+Convenience method for purchase conversions.
+
+```javascript
+Convultra.trackPurchase({
+  orderId: 'ORD-12345',
+  value: 149.99,
+  currency: 'USD',
+  items: [
+    { sku: 'PROD-001', name: 'Widget', price: 99.99, quantity: 1 },
+    { sku: 'PROD-002', name: 'Case', price: 50.00, quantity: 1 }
+  ]
+})
+```
+
+---
+
+### `trackLead(data, userData?)`
+
+Convenience method for lead conversions.
+
+```javascript
+Convultra.trackLead({
+  leadId: 'LEAD-12345',
+  value: 100,
+  formName: 'Contact Form',
+  leadType: 'demo_request'
+})
+```
+
+---
+
+### `trackSignup(data, userData?)`
+
+Convenience method for signup conversions.
+
+```javascript
+Convultra.trackSignup({
+  userId: 'user_12345',
+  plan: 'pro',
+  value: 29.99
+})
+```
+
+---
+
+### `trackSubscription(data, userData?)`
+
+Convenience method for subscription conversions.
+
+```javascript
+Convultra.trackSubscription({
+  subscriptionId: 'sub_12345',
+  plan: 'monthly_pro',
+  value: 29.99,
+  interval: 'monthly'
+})
+```
+
+---
+
+### `trackDownload(data)`
+
+Convenience method for download events.
+
+```javascript
+Convultra.trackDownload({
+  downloadId: 'dl_12345',
+  fileName: 'whitepaper.pdf',
+  category: 'resources'
+})
+```
+
+---
+
+## Enhanced Conversions
+
+### `identify(userId, traits?)`
+
+Identifies a user for Enhanced Conversions.
+
+```javascript
+Convultra.identify('user_12345', {
+  email: 'user@example.com',
+  firstName: 'John',
+  lastName: 'Doe'
+})
+```
+
+**Parameters:**
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `userId` | `string` | Required | Your user ID |
+| `traits` | `object` | `{}` | User traits |
+
+---
+
+### `setEnhancedUserData(userData)`
+
+Sets user data for subsequent conversions without triggering an event.
+
+```javascript
+Convultra.setEnhancedUserData({
+  email: 'user@example.com',
+  phone: '+1234567890'
+})
+```
+
+---
+
+### `enhance(userData)`
+
+One-time enhanced data update without storing.
+
+```javascript
+Convultra.enhance({
+  email: 'user@example.com'
+})
+```
+
+---
+
+## Session Management
+
+### `getSessionId()`
+
+Returns the current session ID.
+
+```javascript
+const sessionId = Convultra.getSessionId()
+// => "sess_1704067200000_abc123"
+```
+
+**Returns:** `string`
+
+---
+
+### `getUserId()`
+
+Returns the current user ID (if identified).
+
+```javascript
+const userId = Convultra.getUserId()
+// => "user_12345" or null
+```
+
+**Returns:** `string | null`
+
+---
+
+### `reset()`
+
+Resets the session and clears user data.
+
+```javascript
+Convultra.reset()
+```
+
+Useful for:
+- User logout
+- Testing
+- Privacy compliance
+
+---
+
+## Utilities
+
+### `debug(enabled)`
+
+Enables or disables debug logging.
+
+```javascript
+// Enable debug mode
+Convultra.debug(true)
+
+// Disable debug mode
+Convultra.debug(false)
+```
+
+---
+
+### `getClickIds()`
+
+Returns captured click IDs.
+
+```javascript
+const clickIds = Convultra.getClickIds()
+// => { gclid: "Cj0KCQ...", fbclid: "IwAR3x...", msclkid: null, ... }
+```
+
+**Returns:** `object`
+
+---
+
+### `getCrossdomainLink(url)`
+
+Generates a cross-domain link with session data.
+
+```javascript
+const link = Convultra.getCrossdomainLink('https://other-domain.com')
+// => "https://other-domain.com?_cvl=eyJzZXNzaW9u..."
+```
+
+**Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `url` | `string` | Target URL |
+
+**Returns:** `string`
+
+---
+
+## Command Queue
+
+Before the SDK loads, you can queue commands:
+
+```javascript
+window.cvq = window.cvq || []
+cvq.push(['init', { apiKey: 'your-key', endpoint: 'https://...' }])
+cvq.push(['track', 'custom_event', { key: 'value' }])
+```
+
+**Queue syntax:**
+
+```javascript
+cvq.push(['methodName', arg1, arg2, ...])
+```
+
+---
+
+## Data Attributes API
+
+Track events declaratively with HTML attributes:
+
+### Configuration
+
+```html
+<script
+  src="https://cdn.convultra.com/ultra.min.js"
+  data-convultra-api-key="your-api-key"
+  data-convultra-endpoint="https://your-endpoint.com"
+  data-convultra-auto-track="true"
+></script>
+```
+
+### Event Tracking
+
+```html
+<button 
+  data-convultra-event="click"
+  data-convultra-event-name="button_click"
+  data-convultra-button-id="cta-signup"
+>
+  Sign Up
+</button>
+```
+
+### Conversion Tracking
+
+```html
+<form
+  data-convultra-event="submit"
+  data-convultra-event-name="lead"
+  data-convultra-value="100"
+>
+  <!-- Form fields -->
+</form>
+```
+
+---
+
+## TypeScript Types
+
+```typescript
+interface ConvultraConfig {
+  apiKey: string
+  endpoint: string
+  autoTrack?: boolean
+  debug?: boolean
+  respectDNT?: boolean
+  crossDomainDomains?: string[]
+}
+
+interface ConversionData {
+  orderId?: string
+  value?: number
+  currency?: string
+  items?: ProductItem[]
+  [key: string]: unknown
+}
+
+interface UserData {
+  email?: string
+  phone?: string
+  firstName?: string
+  lastName?: string
+  city?: string
+  state?: string
+  postalCode?: string
+  country?: string
+}
+
+interface ProductItem {
+  sku: string
+  name?: string
+  price?: number
+  quantity?: number
+}
+```
+
+---
+
+## Next Steps
+
+- [Server API →](/api-reference/server-api)
+- [Webhooks →](/api-reference/webhooks)
+

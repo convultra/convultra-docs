@@ -1,0 +1,295 @@
+import { Callout, Steps } from 'nextra/components'
+
+# Webhooks
+
+Receive real-time event notifications via HTTP webhooks.
+
+## Overview
+
+Webhooks push events to your server as they occur, enabling:
+- Real-time order processing
+- CRM integrations
+- Custom alerting
+- Data synchronization
+
+---
+
+## Setup
+
+<Steps>
+### Navigate to Webhooks
+
+**Dashboard → Settings → Webhooks**
+
+### Add Endpoint
+
+Click **Add Webhook**
+
+### Configure
+
+| Field | Description |
+|-------|-------------|
+| **URL** | Your HTTPS endpoint |
+| **Events** | Which events to send |
+| **Secret** | HMAC signing key |
+
+### Test
+
+Click **Send Test** to verify connectivity
+</Steps>
+
+---
+
+## Event Types
+
+Select which events trigger webhooks:
+
+| Event | Description |
+|-------|-------------|
+| `*` | All events |
+| `pageview` | Page views |
+| `purchase` | Purchases |
+| `lead` | Leads |
+| `signup` | Signups |
+| `subscription` | Subscriptions |
+| `conversion.*` | All conversions |
+
+---
+
+## Webhook Payload
+
+### Headers
+
+```http
+POST /your-webhook HTTP/1.1
+Content-Type: application/json
+X-Convultra-Signature: sha256=abc123...
+X-Convultra-Event: purchase
+X-Convultra-Delivery: del_1704067200000
+```
+
+### Body
+
+```json
+{
+  "id": "evt_1704067200000_abc123",
+  "type": "purchase",
+  "timestamp": "2024-01-15T14:30:45Z",
+  "project_id": "proj_abc123",
+  
+  "data": {
+    "session_id": "sess_xyz789",
+    "user_id": "user_12345",
+    "page_url": "https://yoursite.com/checkout",
+    
+    "properties": {
+      "order_id": "ORD-12345",
+      "value": 99.99,
+      "currency": "USD"
+    },
+    
+    "attribution": {
+      "source": "google",
+      "medium": "cpc",
+      "campaign": "summer_sale",
+      "gclid": "Cj0KCQ..."
+    }
+  }
+}
+```
+
+---
+
+## Signature Verification
+
+<Callout>
+  Always verify webhook signatures to ensure authenticity.
+</Callout>
+
+### How It Works
+
+1. Convultra creates HMAC-SHA256 of the request body
+2. Signs with your webhook secret
+3. Sends signature in `X-Convultra-Signature` header
+
+### Verification Code
+
+```javascript
+const crypto = require('crypto')
+
+function verifyWebhook(payload, signature, secret) {
+  const expected = 'sha256=' + crypto
+    .createHmac('sha256', secret)
+    .update(payload)
+    .digest('hex')
+  
+  return crypto.timingSafeEqual(
+    Buffer.from(signature),
+    Buffer.from(expected)
+  )
+}
+
+// Express example
+app.post('/webhook', express.raw({ type: 'application/json' }), (req, res) => {
+  const signature = req.headers['x-convultra-signature']
+  
+  if (!verifyWebhook(req.body, signature, process.env.WEBHOOK_SECRET)) {
+    return res.status(401).send('Invalid signature')
+  }
+  
+  const event = JSON.parse(req.body)
+  // Process event...
+  
+  res.status(200).send('OK')
+})
+```
+
+---
+
+## Response Requirements
+
+### Success
+
+Return `2xx` status to acknowledge receipt:
+
+```
+HTTP/1.1 200 OK
+```
+
+### Failure
+
+Non-2xx status triggers retry:
+
+```
+HTTP/1.1 500 Internal Server Error
+```
+
+---
+
+## Retry Policy
+
+Failed webhooks are retried automatically:
+
+| Attempt | Delay |
+|---------|-------|
+| 1 | Immediate |
+| 2 | 1 minute |
+| 3 | 5 minutes |
+| 4 | 30 minutes |
+| 5 | 2 hours |
+| 6 | 8 hours |
+
+After 6 attempts, the webhook is marked as failed.
+
+---
+
+## Delivery Logs
+
+View webhook delivery history:
+
+**Dashboard → Settings → Webhooks → View Logs**
+
+Each log shows:
+- Timestamp
+- Event type
+- Response status
+- Response time
+- Payload (click to expand)
+
+---
+
+## Idempotency
+
+Use the `id` field to handle duplicate deliveries:
+
+```javascript
+app.post('/webhook', async (req, res) => {
+  const event = JSON.parse(req.body)
+  
+  // Check if already processed
+  const exists = await db.webhookEvents.findOne({ eventId: event.id })
+  if (exists) {
+    return res.status(200).send('Already processed')
+  }
+  
+  // Process event
+  await processEvent(event)
+  
+  // Mark as processed
+  await db.webhookEvents.create({ eventId: event.id })
+  
+  res.status(200).send('OK')
+})
+```
+
+---
+
+## Best Practices
+
+### 1. Respond Quickly
+
+Return 200 immediately, process async:
+
+```javascript
+app.post('/webhook', (req, res) => {
+  // Acknowledge immediately
+  res.status(200).send('OK')
+  
+  // Process in background
+  processEventAsync(JSON.parse(req.body))
+})
+```
+
+### 2. Use a Queue
+
+For high volume, queue webhooks:
+
+```javascript
+app.post('/webhook', async (req, res) => {
+  await queue.add('process-webhook', {
+    event: JSON.parse(req.body)
+  })
+  
+  res.status(200).send('Queued')
+})
+```
+
+### 3. Handle Duplicates
+
+Events may be delivered multiple times. Always check `id`.
+
+### 4. Monitor Failures
+
+Set up alerts for repeated webhook failures.
+
+---
+
+## Testing
+
+### Test Endpoint
+
+Use the dashboard to send test webhooks:
+
+1. Go to **Webhooks**
+2. Click **Send Test**
+3. Choose event type
+4. Click **Send**
+
+### Local Development
+
+Use tunneling services for local testing:
+
+```bash
+# ngrok
+ngrok http 3000
+
+# Then use the ngrok URL as your webhook endpoint
+```
+
+---
+
+## Next Steps
+
+- [Pixel Tracking →](/api-reference/pixel-tracking)
+- [Server API →](/api-reference/server-api)
+

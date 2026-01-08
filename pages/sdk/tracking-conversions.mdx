@@ -1,0 +1,446 @@
+import { Callout, Tabs, Tab } from 'nextra/components'
+
+# Tracking Conversions
+
+Conversions are your most important events. Convultra provides specialized methods for each conversion type with automatic deduplication and platform forwarding.
+
+## Conversion Types
+
+| Type | Method | Use Case |
+|------|--------|----------|
+| **Purchase** | `trackPurchase()` | E-commerce transactions |
+| **Lead** | `trackLead()` | Form submissions, contact requests |
+| **Signup** | `trackSignup()` | User registrations |
+| **Subscription** | `trackSubscription()` | Recurring payment signups |
+| **Download** | `trackDownload()` | File downloads, content access |
+| **Custom** | `trackConversion()` | Any other conversion |
+
+---
+
+## Purchase Tracking
+
+Track e-commerce purchases:
+
+```javascript copy
+Convultra.trackPurchase({
+  // Required for deduplication
+  orderId: 'ORDER-12345',
+  
+  // Revenue
+  value: 149.99,
+  currency: 'USD',
+  
+  // Optional: Product details
+  items: [
+    {
+      sku: 'PROD-001',
+      name: 'Widget Pro',
+      price: 99.99,
+      quantity: 1
+    },
+    {
+      sku: 'PROD-002',
+      name: 'Widget Accessory',
+      price: 50.00,
+      quantity: 1
+    }
+  ]
+})
+```
+
+<Callout type="info">
+  **Order ID is crucial!** It enables 24-hour deduplication. Without it, duplicate orders may be counted if users refresh the thank-you page.
+</Callout>
+
+### E-commerce Platform Examples
+
+<Tabs items={['Shopify', 'WooCommerce', 'Stripe']}>
+  <Tab>
+```javascript copy filename="Shopify thank-you page"
+// Access Shopify order data
+Convultra.trackPurchase({
+  orderId: Shopify.checkout.order_id,
+  value: parseFloat(Shopify.checkout.total_price) / 100,
+  currency: Shopify.checkout.currency,
+  items: Shopify.checkout.line_items.map(item => ({
+    sku: item.sku,
+    name: item.title,
+    price: parseFloat(item.price) / 100,
+    quantity: item.quantity
+  }))
+})
+```
+  </Tab>
+  <Tab>
+```php copy filename="WooCommerce thank-you page"
+<script>
+Convultra.trackPurchase({
+  orderId: '<?php echo $order->get_id(); ?>',
+  value: <?php echo $order->get_total(); ?>,
+  currency: '<?php echo $order->get_currency(); ?>',
+  items: [
+    <?php foreach ($order->get_items() as $item): ?>
+    {
+      sku: '<?php echo $item->get_product()->get_sku(); ?>',
+      name: '<?php echo $item->get_name(); ?>',
+      price: <?php echo $item->get_total(); ?>,
+      quantity: <?php echo $item->get_quantity(); ?>
+    },
+    <?php endforeach; ?>
+  ]
+})
+</script>
+```
+  </Tab>
+  <Tab>
+```javascript copy filename="Stripe Checkout success"
+// In your success page/webhook handler
+const session = await stripe.checkout.sessions.retrieve(sessionId)
+
+Convultra.trackPurchase({
+  orderId: session.id,
+  value: session.amount_total / 100,
+  currency: session.currency.toUpperCase(),
+  items: session.line_items.data.map(item => ({
+    sku: item.price.id,
+    name: item.description,
+    price: item.amount_total / 100,
+    quantity: item.quantity
+  }))
+})
+```
+  </Tab>
+</Tabs>
+
+---
+
+## Lead Tracking
+
+Track form submissions and contact requests:
+
+```javascript copy
+Convultra.trackLead({
+  // For deduplication (recommended)
+  leadId: 'LEAD_' + Date.now(),
+  
+  // Optional: Estimated value
+  value: 100,
+  currency: 'USD',
+  
+  // Context
+  formName: 'Contact Form',
+  source: 'pricing_page'
+})
+```
+
+### Form Integration Example
+
+```javascript copy filename="form-handler.js"
+document.querySelector('#contact-form').addEventListener('submit', async (e) => {
+  e.preventDefault()
+  
+  const formData = new FormData(e.target)
+  const leadId = 'LEAD_' + Date.now()
+  
+  // Track lead with user data for Enhanced Conversions
+  Convultra.trackConversion('lead', 
+    {
+      leadId,
+      value: 100,
+      formName: 'Contact Form',
+      source: 'website'
+    },
+    {
+      email: formData.get('email'),
+      phone: formData.get('phone'),
+      firstName: formData.get('firstName'),
+      lastName: formData.get('lastName')
+    }
+  )
+  
+  // Submit form to your backend
+  await fetch('/api/leads', {
+    method: 'POST',
+    body: formData
+  })
+  
+  // Show success message
+  showThankYou()
+})
+```
+
+---
+
+## Signup Tracking
+
+Track user registrations and trial starts:
+
+```javascript copy
+Convultra.trackSignup({
+  // User identifier for deduplication
+  userId: 'user_abc123',
+  
+  // Signup details
+  plan: 'trial',  // 'free', 'trial', 'starter', 'pro'
+  method: 'email', // 'email', 'google', 'github', 'apple'
+  source: 'website'
+})
+```
+
+### Auth Integration Examples
+
+<Tabs items={['Auth0', 'Firebase', 'Supabase', 'Custom']}>
+  <Tab>
+```javascript copy
+// Auth0 post-registration action
+auth0.on('authenticated', (user) => {
+  Convultra.trackSignup({
+    userId: user.sub,
+    plan: 'trial',
+    method: user.identities[0].provider
+  })
+  
+  Convultra.identify(user.sub, {
+    email: user.email,
+    firstName: user.given_name,
+    lastName: user.family_name
+  })
+})
+```
+  </Tab>
+  <Tab>
+```javascript copy
+// Firebase Auth
+import { getAuth, onAuthStateChanged } from 'firebase/auth'
+
+const auth = getAuth()
+onAuthStateChanged(auth, (user) => {
+  if (user && user.metadata.creationTime === user.metadata.lastSignInTime) {
+    // New user (signup)
+    Convultra.trackSignup({
+      userId: user.uid,
+      plan: 'free',
+      method: user.providerData[0]?.providerId || 'email'
+    })
+  }
+})
+```
+  </Tab>
+  <Tab>
+```javascript copy
+// Supabase Auth
+const { data: authListener } = supabase.auth.onAuthStateChange(
+  async (event, session) => {
+    if (event === 'SIGNED_UP') {
+      Convultra.trackSignup({
+        userId: session.user.id,
+        plan: 'free',
+        method: session.user.app_metadata.provider || 'email'
+      })
+    }
+  }
+)
+```
+  </Tab>
+  <Tab>
+```javascript copy
+// After successful registration
+async function handleSignup(userData) {
+  const response = await fetch('/api/signup', {
+    method: 'POST',
+    body: JSON.stringify(userData)
+  })
+  
+  const { user } = await response.json()
+  
+  Convultra.trackSignup({
+    userId: user.id,
+    plan: 'trial',
+    method: 'email'
+  })
+  
+  Convultra.identify(user.id, {
+    email: userData.email,
+    firstName: userData.firstName,
+    lastName: userData.lastName
+  })
+}
+```
+  </Tab>
+</Tabs>
+
+---
+
+## Subscription Tracking
+
+Track recurring payment signups:
+
+```javascript copy
+Convultra.trackSubscription({
+  // For deduplication
+  subscriptionId: 'sub_xyz789',
+  
+  // Revenue
+  value: 29.99,
+  currency: 'USD',
+  
+  // Subscription details
+  plan: 'pro',
+  billingCycle: 'monthly', // 'monthly', 'annual', 'quarterly'
+  trialDays: 14
+})
+```
+
+### Stripe Subscription Example
+
+```javascript copy
+// After successful Stripe subscription
+const subscription = await stripe.subscriptions.create({...})
+
+Convultra.trackSubscription({
+  subscriptionId: subscription.id,
+  value: subscription.items.data[0].price.unit_amount / 100,
+  currency: subscription.currency.toUpperCase(),
+  plan: subscription.items.data[0].price.nickname,
+  billingCycle: subscription.items.data[0].price.recurring.interval
+})
+```
+
+---
+
+## Download Tracking
+
+Track file downloads and content access:
+
+```javascript copy
+Convultra.trackDownload({
+  // For deduplication
+  downloadId: 'DL_' + fileId + '_' + userId,
+  
+  // File details
+  fileName: 'whitepaper-2024.pdf',
+  fileType: 'pdf',
+  category: 'lead_magnet' // 'ebook', 'software', 'resource'
+})
+```
+
+---
+
+## Custom Conversions
+
+For any conversion type not covered above:
+
+```javascript copy
+Convultra.trackConversion('webinar_registration', {
+  // Conversion data
+  conversionId: 'WEBINAR_' + Date.now(),
+  value: 50,
+  currency: 'USD',
+  
+  // Custom properties
+  webinarName: 'Product Launch 2024',
+  webinarDate: '2024-03-15'
+})
+```
+
+---
+
+## With Enhanced Conversions
+
+Include user data for higher match rates:
+
+```javascript copy
+Convultra.trackConversion('purchase',
+  // Conversion data
+  {
+    orderId: 'ORDER-12345',
+    value: 149.99,
+    currency: 'USD'
+  },
+  // User data (hashed automatically)
+  {
+    email: 'customer@example.com',
+    phone: '+1234567890',
+    firstName: 'John',
+    lastName: 'Doe',
+    street: '123 Main St',
+    city: 'New York',
+    postalCode: '10001',
+    country: 'US'
+  }
+)
+```
+
+Learn more in [Enhanced Conversions →](/sdk/enhanced-conversions)
+
+---
+
+## Deduplication
+
+Convultra automatically prevents duplicate conversions:
+
+| ID Type | Window | Priority |
+|---------|--------|----------|
+| `orderId` / `leadId` / `userId` | 24 hours | Highest |
+| Click ID + value | 1 hour | High |
+| Event ID | 5 minutes | Medium |
+| Fingerprint | 5 minutes | Low |
+
+<Callout>
+  Always include an ID (`orderId`, `leadId`, `userId`, etc.) to ensure proper deduplication across page refreshes and multiple browser tabs.
+</Callout>
+
+---
+
+## Data Attribute Conversions
+
+Track conversions without JavaScript:
+
+```html copy
+<!-- Purchase button -->
+<button
+  data-convultra-track="purchase"
+  data-convultra-order-id="ORDER-12345"
+  data-convultra-value="149.99"
+  data-convultra-currency="USD"
+>
+  Complete Purchase
+</button>
+
+<!-- Lead form -->
+<form
+  data-convultra-track="lead"
+  data-convultra-lead-id="LEAD_12345"
+  data-convultra-value="100"
+  data-convultra-form-name="Contact Form"
+>
+  <input type="email" name="email" required />
+  <button type="submit">Submit</button>
+</form>
+```
+
+---
+
+## Pixel Tracking (No-JS)
+
+For environments without JavaScript:
+
+```html copy
+<!-- Pixel on thank-you page -->
+<img 
+  src="https://api.convultra.com/v1/pixel?pid=proj_xxx&e=purchase&value=149.99&oid=ORDER-12345&email=customer@example.com"
+  alt=""
+  style="position:absolute;width:1px;height:1px;border:0;"
+/>
+```
+
+Learn more in [No-JS Pixel →](/advanced/no-js-pixel)
+
+---
+
+## Next Steps
+
+- [Enhanced Conversions →](/sdk/enhanced-conversions)
+- [Deduplication details →](/advanced/deduplication)
+- [Ad platform integrations →](/integrations/google-ads)
+

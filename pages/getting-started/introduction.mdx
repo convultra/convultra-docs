@@ -1,0 +1,133 @@
+import { Callout, Cards, Card } from 'nextra/components'
+
+# Introduction to Convultra
+
+**Track Every Conversion. Ultra Accurate.**
+
+Convultra is a server-side conversion tracking platform that captures **30-40% more conversions** than traditional client-side tracking methods. We solve the fundamental problems that cause conversion data loss:
+
+- 🚫 **Ad blockers** blocking Google/Meta/Microsoft tracking pixels
+- 🍪 **iOS Safari ITP** limiting cookies to 7 days
+- 🔒 **Privacy browsers** (Firefox ETP, Brave) restricting tracking
+- ⏱️ **Cookie expiration** losing conversions after 30+ days
+- 📱 **Cross-device journeys** breaking attribution chains
+
+## The Problem
+
+Standard conversion tracking (gtag.js, Facebook Pixel, UET) relies on:
+
+1. Client-side JavaScript executing successfully
+2. Cookies persisting until conversion
+3. Tracking requests not being blocked
+
+In 2024, this fails 25-40% of the time:
+
+| Failure Mode | Impact |
+|--------------|--------|
+| Ad blockers | 20-30 percent of users |
+| iOS Safari ITP | All iOS Safari users after 7 days |
+| Cross-device | 30-40 percent of customer journeys |
+| Cookie clearing | Varies by audience |
+
+<Callout type="info">
+  **Industry benchmark**: Standard conversion tracking achieves around 70 percent accuracy. Convultra achieves 95-98 percent.
+</Callout>
+
+## The Convultra Solution
+
+Convultra captures conversions through multiple redundant methods:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                      User Journey                                │
+│                                                                  │
+│  1. User clicks ad → Convultra captures gclid/fbclid/msclkid    │
+│  2. Stores click ID in localStorage (90-day retention)          │
+│  3. User browses → All pages tracked with session data          │
+│  4. User converts → Conversion sent server-side to Convultra    │
+│  5. Convultra → Forwards to Google Ads, Meta, Microsoft APIs    │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Key Differentiators
+
+| Feature | Traditional Tracking | Convultra |
+|---------|---------------------|-----------|
+| **Accuracy** | Around 70 pct | 95-98 pct |
+| **Ad Blocker Resistant** | ❌ | ✅ Server-side |
+| **Cookie-Independent** | ❌ | ✅ 90-day localStorage |
+| **Cross-Platform** | ❌ Separate | ✅ Unified |
+| **Real-Time** | ⏱️ 3-48 hours | ✅ Under 5 minutes |
+| **Deduplication** | ❌ | ✅ Multi-tier |
+| **Recovery Tracking** | ❌ | ✅ Shows what would be lost |
+
+## How It Works
+
+<Cards>
+  <Card title="1. Capture" href="/getting-started/how-it-works#capture">
+    SDK captures click IDs, session data, and user behavior
+  </Card>
+  <Card title="2. Store" href="/getting-started/how-it-works#store">
+    Data persisted with 90-day retention, surviving cookie limits
+  </Card>
+  <Card title="3. Forward" href="/getting-started/how-it-works#forward">
+    Conversions sent server-side to all connected ad platforms
+  </Card>
+  <Card title="4. Recover" href="/getting-started/how-it-works#recover">
+    Lost conversions recovered and reported in dashboard
+  </Card>
+</Cards>
+
+## What You Can Track
+
+### Conversion Types
+
+- **Purchase** - E-commerce transactions with revenue
+- **Lead** - Form submissions, contact requests
+- **Signup** - User registrations, trial starts
+- **Subscription** - Recurring payment signups
+- **Download** - Ebook, software, resource downloads
+- **Custom** - Any event you define
+
+### Data Captured
+
+Every conversion includes:
+
+- **Attribution** - Click ID, UTM parameters, referrer
+- **Session** - Page views, time on site, device info
+- **User Data** - Hashed email/phone for Enhanced Conversions
+- **Value** - Revenue, currency, order details
+- **Geography** - Country, city, timezone
+
+## Platform Integrations
+
+Convultra forwards conversions to all major ad platforms:
+
+| Platform | Method | Features |
+|----------|--------|----------|
+| **Google Ads** | Offline Conversions API | Enhanced Conversions, GCLID matching |
+| **Meta/Facebook** | Conversions API | FBC/FBP cookies, Advanced Matching |
+| **Microsoft Ads** | Offline Conversions | MSCLKID matching, Enhanced Conversions |
+| **TikTok** | Events API | TTCLID matching |
+| **LinkedIn** | Conversions API | Li_fat_id matching |
+
+## Requirements
+
+- A website or web application
+- Access to add a script tag or npm package
+- A Convultra account ([Sign up →](https://app.convultra.com))
+
+No server-side code changes required. The SDK handles everything client-side, and our infrastructure handles server-side forwarding.
+
+## Next Steps
+
+<Cards>
+  <Card title="Installation →" href="/getting-started/installation">
+    Multiple ways to add Convultra to your site
+  </Card>
+  <Card title="Quick Start →" href="/getting-started/quick-start">
+    Get tracking in 5 minutes
+  </Card>
+</Cards>
+
