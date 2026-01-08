@@ -2,9 +2,9 @@ import { Callout } from 'nextra/components'
 
 # How Convultra Works
 
-Convultra uses a multi-layered approach to achieve 95-98% conversion tracking accuracy. This page explains the architecture and technology behind the platform.
+Convultra uses a multi-layered approach to achieve 95-98% conversion tracking accuracy. This page explains the data flow and key concepts.
 
-## Architecture Overview
+## Overview
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
@@ -14,29 +14,23 @@ Convultra uses a multi-layered approach to achieve 95-98% conversion tracking ac
 │  │  • Captures click IDs (gclid, fbclid, msclkid)                  │   │
 │  │  • Stores in localStorage (90-day retention)                     │   │
 │  │  • Tracks sessions and page views                                │   │
-│  │  • Sends conversions server-side                                 │   │
+│  │  • Sends conversions to Convultra                                │   │
 │  └─────────────────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────────────────┘
-                                    │
-                                    ▼
+                                   │
+                                   ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                         Convultra Cloud                                  │
-│  ┌───────────────┐  ┌───────────────┐  ┌───────────────────────────┐   │
-│  │  API Gateway  │──│    Lambda     │──│     Message Queue         │   │
-│  │  (Tracking)   │  │ (Processing)  │  │      (SQS)                │   │
-│  └───────────────┘  └───────────────┘  └───────────────────────────┘   │
-│                            │                        │                    │
-│                            ▼                        ▼                    │
-│  ┌───────────────────────────────┐  ┌────────────────────────────────┐ │
-│  │        Tinybird               │  │      Ad Platform Processors    │ │
-│  │   (Real-time Analytics)       │  │  • Google Ads Processor       │ │
-│  │   • Events storage            │  │  • Meta Ads Processor         │ │
-│  │   • Analytics pipes           │  │  • Microsoft Ads Processor    │ │
-│  │   • Deduplication             │  │  • TikTok Ads Processor       │ │
-│  └───────────────────────────────┘  └────────────────────────────────┘ │
+│                         Convultra Platform                              │
+│                                                                          │
+│  • Receives and validates conversion events                             │
+│  • Deduplicates across all sources                                      │
+│  • Enriches with stored click history                                   │
+│  • Forwards to connected ad platforms                                   │
+│  • Powers real-time analytics dashboard                                 │
+│                                                                          │
 └─────────────────────────────────────────────────────────────────────────┘
-                                    │
-                                    ▼
+                                   │
+                                   ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                        Ad Platforms                                      │
 │  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐       │
@@ -82,22 +76,7 @@ When a user lands on your website, the SDK immediately captures:
   session_id: 'ses_1234567890_abc',
   landing_page: 'https://yoursite.com/?gclid=...',
   referrer: 'https://google.com/search?q=...',
-  start_time: 1704067200000,
-  fingerprint: 'fp_8a7b3c2d1e'
-}
-```
-
-### Device & Geo Data
-```javascript
-{
-  user_agent: 'Mozilla/5.0...',
-  screen_resolution: { width: 1920, height: 1080 },
-  viewport: { width: 1440, height: 900 },
-  timezone: 'America/New_York',
-  language: 'en-US',
-  device_type: 'desktop',
-  browser: 'Chrome',
-  os: 'macOS'
+  start_time: 1704067200000
 }
 ```
 
@@ -142,33 +121,22 @@ cvl_session: {
 
 ## Phase 3: Forward
 
-When a conversion occurs, data flows through our processing pipeline:
+When a conversion occurs, the SDK sends the event to Convultra with all relevant attribution data:
 
-### Step 1: SDK Sends Conversion
 ```javascript
-// Event payload
+// What gets sent on conversion
 {
-  event_id: 'evt_1704067200000_abc',
   event_type: 'purchase',
-  project_id: 'proj_your_api_key',
-  session_id: 'ses_1704067200000_xyz',
   
   // Conversion data
   value: 99.99,
   currency: 'USD',
+  order_id: 'ORDER-12345',
   
-  // Attribution data (from click history)
+  // Attribution (from stored click history)
   gclid: 'Cj0KCQjw...',
-  click_history: [...],
   
-  // Recovery signals
-  recovery_signals: {
-    is_ios_safari: true,
-    has_platform_cookie: false,
-    click_age_days: 14
-  },
-  
-  // User data for Enhanced Conversions
+  // User data for Enhanced Conversions (hashed)
   user_data: {
     email: 'hashed_email',
     phone: 'hashed_phone'
@@ -176,21 +144,13 @@ When a conversion occurs, data flows through our processing pipeline:
 }
 ```
 
-### Step 2: Lambda Processing
-```
-1. Validate event data
-2. Check deduplication (prevent duplicates)
-3. Classify recovery status
-4. Enrich with geo data
-5. Store in Tinybird
-6. Publish to conversion queue
-```
+Convultra then:
+1. Validates and deduplicates the event
+2. Enriches with any additional stored data
+3. Formats for each connected ad platform
+4. Forwards via server-side APIs
 
-### Step 3: Platform Forwarding
-
-For each connected platform, a specialized processor formats and sends the conversion:
-
-**Google Ads:**
+**Example: Google Ads format:**
 ```javascript
 {
   conversionAction: 'customers/123/conversionActions/456',
@@ -206,12 +166,11 @@ For each connected platform, a specialized processor formats and sends the conve
 }
 ```
 
-**Meta Conversions API:**
+**Example: Meta Conversions API format:**
 ```javascript
 {
   event_name: 'Purchase',
   event_time: 1704067200,
-  event_source_url: 'https://yoursite.com/thank-you',
   action_source: 'website',
   user_data: {
     em: ['sha256_email_hash'],
@@ -235,48 +194,24 @@ Convultra tracks which conversions would have been lost by traditional tracking:
 
 ### Recovery Classification
 
-```javascript
-function classifyRecovery(conversion) {
-  const reasons = []
-  
-  // iOS Safari ITP (7-day limit)
-  if (conversion.is_ios_safari && conversion.click_age_days > 7) {
-    reasons.push('ios_itp')
-  }
-  
-  // Cookie expired (30+ days)
-  if (conversion.click_age_days > 30) {
-    reasons.push('cookie_expired')
-  }
-  
-  // Platform cookie missing (user cleared cookies)
-  if (!conversion.has_platform_cookie && conversion.platform_tracking_installed) {
-    reasons.push('cookie_missing')
-  }
-  
-  // Ad blocker detected
-  if (conversion.platform_pixel_blocked) {
-    reasons.push('ad_blocker')
-  }
-  
-  return {
-    is_recovered: reasons.length > 0,
-    recovery_reasons: reasons
-  }
-}
-```
+A conversion is marked as "recovered" when:
 
-### Recovery Metrics
+| Condition | Why It Would Be Lost |
+|-----------|---------------------|
+| **iOS Safari + click age > 7 days** | Safari ITP deletes cookies after 7 days |
+| **Click age > 30 days** | Standard cookies expire |
+| **Platform cookie missing** | User cleared cookies or uses private browsing |
+| **Ad blocker detected** | Platform pixel was blocked |
 
-| Metric | Calculation |
-|--------|-------------|
-| **Recovery Rate** | Recovered Conversions / Total Conversions × 100 |
-| **Tracking Uplift** | Recovered / Platform Would Report × 100 |
-| **Recovered Revenue** | Sum of recovered conversion values |
+### What You See in Dashboard
+
+- **Recovery Rate** - Percentage of conversions that would have been lost
+- **Tracking Uplift** - How much more you're tracking vs. platform pixels alone
+- **Recovered Revenue** - Total value of recovered conversions
 
 ---
 
-## Deduplication System
+## Deduplication
 
 Convultra prevents duplicate conversions through a multi-tier system:
 
@@ -292,10 +227,6 @@ Priority 2: Click ID + Value (1-hour window)
 Priority 3: Event ID (5-minute window)
 ├── SDK-generated unique event ID
 └── Same ID = duplicate blocked (page refresh protection)
-
-Priority 4: Fingerprint (5-minute window)
-├── Device fingerprint + event characteristics
-└── Similar events = duplicate blocked
 ```
 
 ---
@@ -315,16 +246,13 @@ User browses site → Page views tracked
 User converts → SDK sends conversion with click history
         │
         ▼
-Lambda processes → Dedup check → Recovery classification
+Convultra processes → Dedup → Recovery classification
         │
         ▼
-Stored in Tinybird → Published to queue
+Forwarded to ad platforms → Google Ads, Meta, Microsoft, TikTok
         │
         ▼
-Platform processors → Google Ads API, Meta CAPI, etc.
-        │
-        ▼
-Dashboard displays → Analytics, conversions, recovery stats
+Dashboard updates → Analytics, conversions, recovery stats
 ```
 
 ---
@@ -333,7 +261,7 @@ Dashboard displays → Analytics, conversions, recovery stats
 
 | Metric | Value |
 |--------|-------|
-| **SDK Size** | Under 50KB gzipped |
+| **SDK Size** | Under 15KB gzipped |
 | **Page Load Impact** | Under 50ms |
 | **Tracking Latency** | Under 200ms |
 | **Platform Forwarding** | Under 5 minutes |
@@ -346,4 +274,3 @@ Dashboard displays → Analytics, conversions, recovery stats
 - [SDK Configuration →](/sdk/configuration)
 - [Deduplication Details →](/advanced/deduplication)
 - [Attribution Models →](/advanced/attribution-models)
-
