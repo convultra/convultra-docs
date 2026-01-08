@@ -2,24 +2,98 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Custom styles for Convultra docs */
-
-/* Nextra card improvements */
-.nextra-cards {
-  margin-top: 1.5rem;
+/* Main content wrapper - target Nextra's structure */
+.nx-w-full.nx-break-words {
+  max-width: 1100px !important;
+  margin: 0 auto !important;
+  padding: 2rem 2rem !important;
 }
 
-/* Code block styling */
+/* Homepage title styling */
+h1 {
+  font-size: 2.25rem !important;
+  font-weight: 700 !important;
+  margin-bottom: 0.75rem !important;
+}
+
+/* Intro paragraph */
+main > p:first-of-type {
+  font-size: 1.1rem;
+  opacity: 0.75;
+  margin-bottom: 2rem !important;
+  line-height: 1.6;
+}
+
+/* Section headings */
+h2 {
+  font-size: 1.25rem !important;
+  font-weight: 600 !important;
+  margin-top: 2.5rem !important;
+  margin-bottom: 1rem !important;
+  color: inherit;
+}
+
+/* Nextra Cards grid */
+.nextra-cards {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)) !important;
+  gap: 0.875rem !important;
+  margin-top: 0.75rem !important;
+  margin-bottom: 1.5rem !important;
+}
+
+/* Individual card styling */
+.nextra-card {
+  padding: 1rem 1.25rem !important;
+  border-radius: 0.625rem !important;
+  border: 1px solid rgba(128, 128, 128, 0.12) !important;
+  background: rgba(128, 128, 128, 0.04) !important;
+  transition: all 0.15s ease !important;
+}
+
+.nextra-card:hover {
+  border-color: rgba(99, 102, 241, 0.35) !important;
+  background: rgba(99, 102, 241, 0.06) !important;
+}
+
+.nextra-card span {
+  font-weight: 500 !important;
+  font-size: 0.95rem !important;
+}
+
+/* Dark mode adjustments */
+.dark .nextra-card {
+  background: rgba(255, 255, 255, 0.025) !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+.dark .nextra-card:hover {
+  background: rgba(99, 102, 241, 0.08) !important;
+  border-color: rgba(99, 102, 241, 0.25) !important;
+}
+
+/* Need Help list styling */
+main ul {
+  margin-top: 0.75rem;
+  padding-left: 1.25rem;
+}
+
+main ul li {
+  margin-bottom: 0.375rem;
+  font-size: 0.95rem;
+}
+
+/* Code blocks */
 pre {
   border-radius: 0.5rem !important;
 }
 
-/* Animation */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
+/* Smooth animation */
 main {
   animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
